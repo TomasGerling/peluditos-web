@@ -5,8 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="description" content="Peluditos Petshop en Necochea. Catálogo actualizado con los mejores precios.">
     <meta name="theme-color" content="#FF8C42">
+    
+    <meta property="og:title" content="Peluditos Petshop - Catálogo Online 🐾">
+    <meta property="og:description" content="Mirá nuestro catálogo actualizado de alimentos y accesorios en Necochea. ¡Envíos a domicilio!">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tu-usuario.github.io/peluditos/"> <meta property="og:image" content="https://tu-usuario.github.io/peluditos/img/og-image.jpg"> 
+
     <title>Peluditos Petshop - Catálogo Online</title>
     
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TU_ID_AQUI"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      // REEMPLAZA 'G-TU_ID_AQUI' POR TU ID DE MEDICIÓN REAL (EJ: G-12345ABCDE)
+      gtag('config', 'G-TU_ID_AQUI');
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -17,173 +33,95 @@
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"></noscript>
 
     <style>
-        /* DEFINICION DE VARIABLES CSS PARA TEMAS */
         :root {
-            /* TEMA CLARO (Default) */
-            --primary: #FF8C42; 
-            --primary-dark: #e67e3b;
-            --secondary: #4CA1A3; 
-            --accent: #FFD93D;
-            --text: #2c2c2c;
-            --text-light: #595959;
-            --bg: #f4f6f8; 
-            --white: #ffffff;
-            --input-bg: #fafafa;
-            --border: #e0e0e0;
-            --whatsapp: #25D366; 
-            --offer: #D32F2F;
-            --btn-bg: #f0f0f0;
-            --card-radius: 16px;
+            --primary: #FF8C42; --primary-dark: #e67e3b;
+            --secondary: #4CA1A3; --accent: #FFD93D;
+            --text: #2c2c2c; --text-light: #595959;
+            --bg: #f4f6f8; --white: #ffffff;
+            --input-bg: #fafafa; --border: #e0e0e0;
+            --whatsapp: #25D366; --offer: #D32F2F;
+            --btn-bg: #f0f0f0; --card-radius: 16px;
             --shadow: 0 4px 12px rgba(0,0,0,0.04);
             --shadow-header: 0 2px 15px rgba(0,0,0,0.05);
         }
 
-        /* TEMA OSCURO */
         [data-theme="dark"] {
-            --primary: #FF8C42;
-            --primary-dark: #ff9e5e;
+            --primary: #FF8C42; --primary-dark: #ff9e5e;
             --secondary: #4CA1A3;
-            --text: #e0e0e0;
-            --text-light: #aaaaaa;
-            --bg: #121212;
-            --white: #1e1e1e;
-            --input-bg: #2d2d2d;
-            --border: #333333;
-            --btn-bg: #2d2d2d;
-            --offer: #ff5252;
+            --text: #e0e0e0; --text-light: #aaaaaa;
+            --bg: #121212; --white: #1e1e1e;
+            --input-bg: #2d2d2d; --border: #333333;
+            --btn-bg: #2d2d2d; --offer: #ff5252;
             --shadow: 0 4px 12px rgba(0,0,0,0.3);
             --shadow-header: 0 2px 15px rgba(0,0,0,0.2);
         }
 
-        /* ESTILOS BASE */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Open Sans', sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); padding-bottom: 100px; transition: background-color 0.3s, color 0.3s; }
 
-        /* HEADER */
         header { background-color: var(--white); padding: 0.8rem 5%; box-shadow: var(--shadow-header); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s; height: 70px; }
         .logo { font-family: 'Fredoka', sans-serif; font-size: 1.5rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 8px; text-decoration: none; }
         .logo i { color: var(--secondary); transform: rotate(-10deg); }
         
         .header-actions { display: flex; align-items: center; gap: 10px; }
-        
         .address-btn { font-size: 0.9rem; color: var(--text-light); display: flex; align-items: center; gap: 6px; background: var(--btn-bg); padding: 8px 15px; border-radius: 50px; text-decoration: none; font-weight: 600; transition: all 0.2s; }
-        .address-btn:hover { background: var(--border); color: var(--text); }
-
         .theme-toggle { background: var(--btn-bg); border: none; color: var(--text); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; transition: all 0.2s; }
-        .theme-toggle:hover { background: var(--border); transform: rotate(15deg); }
 
-        /* HERO SECTION */
         .hero { background: linear-gradient(135deg, var(--secondary), #2c7a7b); color: #ffffff; text-align: center; padding: 2.5rem 1rem 3.5rem 1rem; border-radius: 0 0 30px 30px; margin-bottom: -30px; position: relative; content-visibility: auto; }
         .hero h1 { font-family: 'Fredoka', sans-serif; margin: 0 0 8px 0; font-size: 2.2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .hero p { margin: 0; font-size: 1.1rem; opacity: 1; max-width: 600px; margin: 0 auto; font-weight: 500; }
         .promo-pill { background: rgba(0,0,0,0.25); display: inline-block; padding: 6px 16px; border-radius: 20px; margin-top: 15px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; backdrop-filter: blur(5px); }
 
-        /* CONTROLS */
         .controls-wrapper { max-width: 1200px; margin: 0 auto 25px auto; padding: 0 20px; position: relative; z-index: 10; }
         .search-container { background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 15px; transition: background-color 0.3s; }
-        .search-box { position: relative; width: 100%; }
+        
+        /* Contenedor flexible para el buscador y el filtro de precio */
+        .search-row { display: flex; gap: 10px; width: 100%; }
+        
+        .search-box { position: relative; flex-grow: 1; }
         .search-box input { width: 100%; padding: 14px 20px 14px 45px; border-radius: 12px; border: 2px solid var(--border); font-size: 1rem; outline: none; transition: border-color 0.2s, background-color 0.3s; font-family: 'Open Sans', sans-serif; background: var(--input-bg); color: var(--text); }
         .search-box input:focus { border-color: var(--primary); background: var(--white); }
         .search-box i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 1.1rem; }
         
+        /* Estilo para el selector de orden */
+        .sort-select { padding: 0 15px; border-radius: 12px; border: 2px solid var(--border); background: var(--input-bg); color: var(--text); font-family: 'Open Sans', sans-serif; cursor: pointer; outline: none; transition: all 0.2s; min-width: 130px; font-weight: 600; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FF8C42%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 12px top 50%; background-size: 10px auto; }
+        .sort-select:focus { border-color: var(--primary); }
+
         .filter-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .filter-scroll::-webkit-scrollbar { display: none; }
         .filter-btn { background: var(--white); border: 1px solid var(--border); color: var(--text-light); padding: 8px 18px; border-radius: 50px; font-family: 'Fredoka', sans-serif; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; flex-shrink: 0; font-size: 0.95rem; }
         .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 3px 10px rgba(255, 140, 66, 0.25); }
 
-        /* GRID PRODUCTOS */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; padding: 0 20px; content-visibility: auto; contain-intrinsic-size: 100px 1000px; }
-        
         .card { background: var(--white); border-radius: var(--card-radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.2s, background-color 0.3s; display: flex; flex-direction: column; justify-content: space-between; will-change: transform; contain: content; }
+        .card-img-container { width: 100%; height: 180px; background: var(--white); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: 15px; border-bottom: 1px solid var(--border); transition: background-color 0.3s; }
+        .product-img { width: auto; height: 100%; max-width: 75%; max-height: 160px; object-fit: contain; }
         
-        .card-img-container { 
-            width: 100%; 
-            height: 180px; 
-            background: var(--white); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            position: relative; 
-            overflow: hidden; 
-            padding: 15px; 
-            border-bottom: 1px solid var(--border); 
-            transition: background-color 0.3s;
-        }
-
-        .product-img { 
-            width: auto; 
-            height: 100%; 
-            max-width: 75%; 
-            max-height: 160px; 
-            object-fit: contain; 
-        }
-        
-        .category-label {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-family: 'Open Sans', sans-serif;
-            font-size: 0.9rem;
-            color: var(--text-light);
-            font-weight: 400;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            pointer-events: none;
-        }
-        
-        .category-label.horizontal {
-            writing-mode: horizontal-tb;
-            top: auto;
-            bottom: 10px;
-            right: 10px;
-            font-size: 0.85rem;
-            color: var(--text);
-            background: rgba(255,255,255,0.9);
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #eee;
-        }
-        [data-theme="dark"] .category-label.horizontal {
-            background: rgba(45,45,45,0.9);
-            border-color: #444;
-        }
+        .category-label { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-family: 'Open Sans', sans-serif; font-size: 0.9rem; color: var(--text-light); font-weight: 400; writing-mode: vertical-rl; text-orientation: mixed; pointer-events: none; }
+        .category-label.horizontal { writing-mode: horizontal-tb; top: auto; bottom: 10px; right: 10px; font-size: 0.85rem; color: var(--text); background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px; border: 1px solid #eee; }
+        [data-theme="dark"] .category-label.horizontal { background: rgba(45,45,45,0.9); border-color: #444; }
 
         .card-header { padding: 1rem 1.2rem 0.5rem 1.2rem; }
-        
-        .offer-badge { 
-            position: absolute; top: 10px; left: 10px; 
-            background: var(--offer); color: white; 
-            font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; 
-            text-transform: uppercase; letter-spacing: 0.5px; z-index: 10;
-        }
-
+        .offer-badge { position: absolute; top: 10px; left: 10px; background: var(--offer); color: white; font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; z-index: 10; }
         .card-title { font-family: 'Fredoka', sans-serif; font-size: 1.1rem; color: var(--text); margin: 0; line-height: 1.35; text-transform: capitalize; font-weight: 600; min-height: 3rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        
         .card-body { padding: 0.5rem 1.2rem 1.2rem 1.2rem; }
         .price-option { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 8px 10px; background: var(--input-bg); border-radius: 10px; border: 1px solid var(--border); transition: background-color 0.3s; }
         .price-option:last-child { margin-bottom: 0; }
         .price-info { display: flex; flex-direction: column; }
         .price-label { font-size: 0.75rem; color: var(--text-light); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .price-amount { font-weight: 800; font-size: 1rem; color: var(--text); }
-        
         .btn-add { background: var(--white); border: 1px solid var(--border); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary); transition: all 0.2s; font-size: 0.9rem; }
         .btn-add:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* SKELETON LOADING */
         .skeleton { background: linear-gradient(90deg, var(--input-bg) 25%, var(--border) 50%, var(--input-bg) 75%); background-size: 200% 100%; animation: shine 1.5s infinite; border-radius: 16px; height: 300px; }
         @keyframes shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .loading { text-align: center; color: var(--text-light); margin-top: 40px; }
-        .error-msg { background: #ffebee; color: #c62828; padding: 15px; border-radius: 10px; margin: 20px auto; max-width: 600px; text-align: center; border: 1px solid #ffcdd2; }
         .placeholder-icon { font-size: 3.5rem; opacity: 0.15; color: var(--secondary); }
 
-        /* FLOATING UI */
         .cart-float { position: fixed; bottom: 30px; right: 25px; background: var(--text); color: var(--bg); width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; box-shadow: 0 8px 20px rgba(0,0,0,0.25); cursor: pointer; z-index: 1000; transition: transform 0.2s; border: none; }
         .cart-float:active { transform: scale(0.95); }
         .cart-badge { position: absolute; top: -2px; right: -2px; background-color: var(--offer); border: 2px solid var(--white); color: #fff; border-radius: 50%; width: 22px; height: 22px; font-size: 0.75rem; display: flex; justify-content: center; align-items: center; font-weight: 700; }
         .support-float { position: fixed; bottom: 30px; left: 25px; background-color: var(--white); color: var(--whatsapp); width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.6rem; box-shadow: 0 4px 15px rgba(0,0,0,0.15); cursor: pointer; z-index: 1000; text-decoration: none; border: 1px solid var(--border); }
 
-        /* MODAL CARRITO */
         .cart-modal { position: fixed; top: 0; right: -100%; width: 100%; max-width: 400px; height: 100vh; background: var(--white); z-index: 1001; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; box-shadow: -5px 0 30px rgba(0,0,0,0.2); }
         .cart-modal.active { right: 0; }
         .cart-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; backdrop-filter: blur(2px); }
@@ -239,10 +177,18 @@
 
     <div class="controls-wrapper">
         <div class="search-container">
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="searchInput" placeholder="Buscar marca..." onkeyup="applyFilters()" aria-label="Buscar productos por nombre o marca">
+            <div class="search-row">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar marca..." onkeyup="applyFilters()" aria-label="Buscar productos por nombre o marca">
+                </div>
+                <select id="priceSort" class="sort-select" onchange="applyFilters()">
+                    <option value="default">Relevancia</option>
+                    <option value="asc">Menor Precio</option>
+                    <option value="desc">Mayor Precio</option>
+                </select>
             </div>
+
             <nav class="filter-scroll" aria-label="Filtros de categoría">
                 <button class="filter-btn active" onclick="setCategory('all', this)" aria-pressed="true">Todos</button>
                 <button class="filter-btn" onclick="setCategory('perro', this)" aria-pressed="false"><i class="fa-solid fa-dog"></i> Perros</button>
@@ -304,7 +250,7 @@
         "advance bio adulto": "./img/advance-bio-adulto.webp",
         "advance bio cachorro": "./img/advance-bio-cachorro.webp",
         "advance bio cordero": "./img/advance-bio-cordero.webp",
-        "dog chow adultos razas pequenas": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Dog-Chow-Adultos-Minis-y-Peque%C3%B1os.jpg.webp", // Mantenemos URL original (falló descarga)
+        "dog chow adultos razas pequenas": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Dog-Chow-Adultos-Minis-y-Peque%C3%B1os.jpg.webp", // Mantenemos URL original
         "dog chow adultos razas medianas": "./img/dog-chow-adultos-razas-medianas.webp",
         "dogui cachorros": "./img/dogui-cachorros.webp",
         "dogui carne": "./img/dogui-carne.webp",
@@ -537,15 +483,36 @@
 
     function applyFilters() {
         const term = document.getElementById('searchInput').value.toLowerCase();
+        const sortOrder = document.getElementById('priceSort').value; // 'default', 'asc', 'desc'
         const grid = document.getElementById('product-grid');
         grid.innerHTML = '';
 
         const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-        const filtered = allProducts.filter(p => {
+        
+        // 1. FILTRADO
+        let filtered = allProducts.filter(p => {
             const matchCat = currentCategory === 'all' || p.category === currentCategory;
             const matchSearch = normalize(p.originalName).includes(normalize(term));
             return matchCat && matchSearch;
         });
+
+        // 2. ORDENAMIENTO
+        if (sortOrder !== 'default') {
+            filtered.sort((a, b) => {
+                // Obtenemos el precio más bajo disponible para comparar
+                const getMinPrice = (prod) => {
+                    const prices = [];
+                    if (prod.precioKg) prices.push(prod.precioKg);
+                    if (prod.precioBolsa) prices.push(prod.precioBolsa);
+                    return Math.min(...prices);
+                };
+
+                const priceA = getMinPrice(a);
+                const priceB = getMinPrice(b);
+
+                return sortOrder === 'asc' ? priceA - priceB : priceB - priceA;
+            });
+        }
 
         if (filtered.length === 0) {
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-light);">No encontramos resultados 🐶🐱</div>';
@@ -567,7 +534,6 @@
             const safeAlt = p.nombre.replace(/"/g, '"');
             
             if (p.imgUrl) {
-                // OPTIMIZACIÓN: decoding="async" y referrerPolicy para evitar cookies de terceros
                 imgHtml = `<div class="card-img-container">
                                ${badgeHtml}
                                <img src="${p.imgUrl}" alt="${safeAlt}" class="product-img" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="200" height="200" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
