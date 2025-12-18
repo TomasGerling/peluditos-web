@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="Peluditos Petshop en Necochea. Catálogo actualizado con los mejores precios.">
+    <meta name="theme-color" content="#FF8C42">
+    <title>Peluditos Petshop - Catálogo Online</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"></noscript>
+
+    <style>
+        /* DEFINICION DE VARIABLES CSS PARA TEMAS */
+        :root {
+            /* TEMA CLARO (Default) */
+            --primary: #FF8C42; 
+            --primary-dark: #e67e3b;
+            --secondary: #4CA1A3; 
+            --accent: #FFD93D;
+            --text: #2c2c2c;
+            --text-light: #595959;
+            --bg: #f4f6f8; 
+            --white: #ffffff;
+            --input-bg: #fafafa;
+            --border: #e0e0e0;
+            --whatsapp: #25D366; 
+            --offer: #D32F2F;
+            --btn-bg: #f0f0f0;
+            --card-radius: 16px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.04);
+            --shadow-header: 0 2px 15px rgba(0,0,0,0.05);
+        }
+
+        /* TEMA OSCURO */
+        [data-theme="dark"] {
+            --primary: #FF8C42;
+            --primary-dark: #ff9e5e;
+            --secondary: #4CA1A3;
+            --text: #e0e0e0;
+            --text-light: #aaaaaa;
+            --bg: #121212;
+            --white: #1e1e1e;
+            --input-bg: #2d2d2d;
+            --border: #333333;
+            --btn-bg: #2d2d2d;
+            --offer: #ff5252;
+            --shadow: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-header: 0 2px 15px rgba(0,0,0,0.2);
+        }
+
+        /* ESTILOS BASE */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Open Sans', sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); padding-bottom: 100px; transition: background-color 0.3s, color 0.3s; }
+
+        /* HEADER */
+        header { background-color: var(--white); padding: 0.8rem 5%; box-shadow: var(--shadow-header); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s; height: 70px; }
+        .logo { font-family: 'Fredoka', sans-serif; font-size: 1.5rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .logo i { color: var(--secondary); transform: rotate(-10deg); }
+        
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+        
+        .address-btn { font-size: 0.9rem; color: var(--text-light); display: flex; align-items: center; gap: 6px; background: var(--btn-bg); padding: 8px 15px; border-radius: 50px; text-decoration: none; font-weight: 600; transition: all 0.2s; }
+        .address-btn:hover { background: var(--border); color: var(--text); }
+
+        .theme-toggle { background: var(--btn-bg); border: none; color: var(--text); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; transition: all 0.2s; }
+        .theme-toggle:hover { background: var(--border); transform: rotate(15deg); }
+
+        /* HERO SECTION */
+        .hero { background: linear-gradient(135deg, var(--secondary), #2c7a7b); color: #ffffff; text-align: center; padding: 2.5rem 1rem 3.5rem 1rem; border-radius: 0 0 30px 30px; margin-bottom: -30px; position: relative; content-visibility: auto; }
+        .hero h1 { font-family: 'Fredoka', sans-serif; margin: 0 0 8px 0; font-size: 2.2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .hero p { margin: 0; font-size: 1.1rem; opacity: 1; max-width: 600px; margin: 0 auto; font-weight: 500; }
+        .promo-pill { background: rgba(0,0,0,0.25); display: inline-block; padding: 6px 16px; border-radius: 20px; margin-top: 15px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; backdrop-filter: blur(5px); }
+
+        /* CONTROLS */
+        .controls-wrapper { max-width: 1200px; margin: 0 auto 25px auto; padding: 0 20px; position: relative; z-index: 10; }
+        .search-container { background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 15px; transition: background-color 0.3s; }
+        .search-box { position: relative; width: 100%; }
+        .search-box input { width: 100%; padding: 14px 20px 14px 45px; border-radius: 12px; border: 2px solid var(--border); font-size: 1rem; outline: none; transition: border-color 0.2s, background-color 0.3s; font-family: 'Open Sans', sans-serif; background: var(--input-bg); color: var(--text); }
+        .search-box input:focus { border-color: var(--primary); background: var(--white); }
+        .search-box i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 1.1rem; }
+        
+        .filter-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .filter-scroll::-webkit-scrollbar { display: none; }
+        .filter-btn { background: var(--white); border: 1px solid var(--border); color: var(--text-light); padding: 8px 18px; border-radius: 50px; font-family: 'Fredoka', sans-serif; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; flex-shrink: 0; font-size: 0.95rem; }
+        .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 3px 10px rgba(255, 140, 66, 0.25); }
+
+        /* GRID PRODUCTOS */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; padding: 0 20px; content-visibility: auto; contain-intrinsic-size: 100px 1000px; }
+        
+        .card { background: var(--white); border-radius: var(--card-radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.2s, background-color 0.3s; display: flex; flex-direction: column; justify-content: space-between; will-change: transform; contain: content; }
+        
+        .card-img-container { 
+            width: 100%; 
+            height: 180px; 
+            background: var(--white); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative; 
+            overflow: hidden; 
+            padding: 15px; 
+            border-bottom: 1px solid var(--border); 
+            transition: background-color 0.3s;
+        }
+
+        .product-img { 
+            width: auto; 
+            height: 100%; 
+            max-width: 75%; 
+            max-height: 160px; 
+            object-fit: contain; 
+        }
+        
+        .category-label {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: 'Open Sans', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 400;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            pointer-events: none;
+        }
+        
+        .category-label.horizontal {
+            writing-mode: horizontal-tb;
+            top: auto;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.85rem;
+            color: var(--text);
+            background: rgba(255,255,255,0.9);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        [data-theme="dark"] .category-label.horizontal {
+            background: rgba(45,45,45,0.9);
+            border-color: #444;
+        }
+
+        .card-header { padding: 1rem 1.2rem 0.5rem 1.2rem; }
+        
+        .offer-badge { 
+            position: absolute; top: 10px; left: 10px; 
+            background: var(--offer); color: white; 
+            font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; 
+            text-transform: uppercase; letter-spacing: 0.5px; z-index: 10;
+        }
+
+        .card-title { font-family: 'Fredoka', sans-serif; font-size: 1.1rem; color: var(--text); margin: 0; line-height: 1.35; text-transform: capitalize; font-weight: 600; min-height: 3rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .card-body { padding: 0.5rem 1.2rem 1.2rem 1.2rem; }
+        .price-option { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 8px 10px; background: var(--input-bg); border-radius: 10px; border: 1px solid var(--border); transition: background-color 0.3s; }
+        .price-option:last-child { margin-bottom: 0; }
+        .price-info { display: flex; flex-direction: column; }
+        .price-label { font-size: 0.75rem; color: var(--text-light); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .price-amount { font-weight: 800; font-size: 1rem; color: var(--text); }
+        
+        .btn-add { background: var(--white); border: 1px solid var(--border); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary); transition: all 0.2s; font-size: 0.9rem; }
+        .btn-add:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* SKELETON LOADING */
+        .skeleton { background: linear-gradient(90deg, var(--input-bg) 25%, var(--border) 50%, var(--input-bg) 75%); background-size: 200% 100%; animation: shine 1.5s infinite; border-radius: 16px; height: 300px; }
+        @keyframes shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .loading { text-align: center; color: var(--text-light); margin-top: 40px; }
+        .error-msg { background: #ffebee; color: #c62828; padding: 15px; border-radius: 10px; margin: 20px auto; max-width: 600px; text-align: center; border: 1px solid #ffcdd2; }
+        .placeholder-icon { font-size: 3.5rem; opacity: 0.15; color: var(--secondary); }
+
+        /* FLOATING UI */
+        .cart-float { position: fixed; bottom: 30px; right: 25px; background: var(--text); color: var(--bg); width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; box-shadow: 0 8px 20px rgba(0,0,0,0.25); cursor: pointer; z-index: 1000; transition: transform 0.2s; border: none; }
+        .cart-float:active { transform: scale(0.95); }
+        .cart-badge { position: absolute; top: -2px; right: -2px; background-color: var(--offer); border: 2px solid var(--white); color: #fff; border-radius: 50%; width: 22px; height: 22px; font-size: 0.75rem; display: flex; justify-content: center; align-items: center; font-weight: 700; }
+        .support-float { position: fixed; bottom: 30px; left: 25px; background-color: var(--white); color: var(--whatsapp); width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.6rem; box-shadow: 0 4px 15px rgba(0,0,0,0.15); cursor: pointer; z-index: 1000; text-decoration: none; border: 1px solid var(--border); }
+
+        /* MODAL CARRITO */
+        .cart-modal { position: fixed; top: 0; right: -100%; width: 100%; max-width: 400px; height: 100vh; background: var(--white); z-index: 1001; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; box-shadow: -5px 0 30px rgba(0,0,0,0.2); }
+        .cart-modal.active { right: 0; }
+        .cart-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; backdrop-filter: blur(2px); }
+        .cart-overlay.active { display: block; }
+        .cart-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--white); }
+        .cart-items { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        .cart-footer { padding: 20px; border-top: 1px solid var(--border); background: var(--white); }
+        .btn-whatsapp { background-color: var(--whatsapp); color: #fff; border: none; width: 100%; padding: 16px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; transition: background 0.3s; }
+        .btn-whatsapp:hover { background-color: #1ebc57; }
+
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .qty-control { display: flex; align-items: center; gap: 12px; background: var(--input-bg); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); }
+        .qty-btn { border: none; background: none; font-weight: bold; cursor: pointer; color: var(--primary); font-size: 1.2rem; padding: 0; display: flex; align-items: center; height: 100%; }
+
+        footer { text-align: center; padding: 30px 20px; color: var(--text-light); font-size: 0.85rem; }
+
+        @media (max-width: 600px) {
+            .grid-container { grid-template-columns: 1fr; gap: 15px; }
+            .card { flex-direction: row; align-items: center; min-height: 140px; }
+            .card-img-container { width: 120px; height: 100%; padding: 10px; border-bottom: none; border-right: 1px solid var(--border); justify-content: center; }
+            .product-img { max-width: 100%; max-height: 110px; }
+            .category-label { display: none; } 
+            .card-header { padding: 15px 10px 5px 10px; }
+            .card-body { padding: 5px 10px 15px 10px; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="#" class="logo" onclick="location.reload()" aria-label="Recargar página">
+        <i class="fa-solid fa-paw"></i> Peluditos
+    </a>
+    
+    <div class="header-actions">
+        <a href="https://www.google.com/maps/search/?api=1&query=Av+75+1317+Necochea" target="_blank" class="address-btn" aria-label="Ver ubicación en Mapa">
+            <i class="fa-solid fa-location-dot"></i> <span style="display:inline-block; margin-left:2px">Av. 75 n° 1317</span>
+        </a>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar modo oscuro" id="themeBtn">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+    </div>
+</header>
+
+<main>
+    <section class="hero">
+        <h1>Lo mejor para tu mascota</h1>
+        <p>Alimento balanceado y accesorios en Necochea</p>
+        <div class="promo-pill">
+            <i class="fa-solid fa-gift"></i> Promo: 10kg acumulables = 1kg de regalo
+        </div>
+    </section>
+
+    <div class="controls-wrapper">
+        <div class="search-container">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="Buscar marca..." onkeyup="applyFilters()" aria-label="Buscar productos por nombre o marca">
+            </div>
+            <nav class="filter-scroll" aria-label="Filtros de categoría">
+                <button class="filter-btn active" onclick="setCategory('all', this)" aria-pressed="true">Todos</button>
+                <button class="filter-btn" onclick="setCategory('perro', this)" aria-pressed="false"><i class="fa-solid fa-dog"></i> Perros</button>
+                <button class="filter-btn" onclick="setCategory('gato', this)" aria-pressed="false"><i class="fa-solid fa-cat"></i> Gatos</button>
+                <button class="filter-btn" onclick="setCategory('otros', this)" aria-pressed="false">Otros</button>
+            </nav>
+        </div>
+    </div>
+
+    <div id="loader" class="grid-container" aria-hidden="true">
+        <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
+
+    <div class="grid-container" id="product-grid" style="display:none;"></div>
+</main>
+
+<a href="#" id="supportBtn" class="support-float" aria-label="Contactar por WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+</a>
+
+<button class="cart-float" onclick="toggleCart()" aria-label="Abrir Carrito de compras">
+    <i class="fa-solid fa-basket-shopping"></i>
+    <div class="cart-badge" id="cart-count">0</div>
+</button>
+
+<div class="cart-overlay" id="cart-overlay" onclick="toggleCart()" aria-hidden="true"></div>
+
+<div class="cart-modal" id="cart-modal" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+    <div class="cart-header">
+        <h3 id="cart-title" style="margin:0">Mi Pedido</h3>
+        <button onclick="toggleCart()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; padding:5px; color:var(--text);" aria-label="Cerrar carrito">×</button>
+    </div>
+    <div class="cart-items" id="cart-items"></div>
+    <div class="cart-footer">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-weight:800; font-size:1.1rem;">
+            <span>Total:</span><span id="cart-total">$0</span>
+        </div>
+        <button class="btn-whatsapp" onclick="checkout()">Enviar Pedido</button>
+    </div>
+</div>
+
+<footer>
+    <p><strong>Peluditos Petshop</strong><br>Necochea, Buenos Aires</p>
+</footer>
+
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRbHFTGg7yD-wla-WTyuksMKmoPhblVtdrNAEf_BpQStuoAvVQZx2cwgigSYETo_A/pub?gid=1152455124&single=true&output=csv";
+    const WHATSAPP_NUMBER = "5492262677026"; 
+
+    // LISTA DE IMAGENES OPTIMIZADAS (LOCALES WEBP)
+    const customImages = {
+        "agility adulto raza pequena": "./img/agility-adulto-raza-pequena.webp",
+        "agility cachorro": "./img/agility-cachorro.webp",
+        "agility adulto": "./img/agility-adulto.webp",
+        "advance bio adulto r. pequena": "./img/advance-bio-adulto-r-pequena.webp",
+        "advance bio adulto": "./img/advance-bio-adulto.webp",
+        "advance bio cachorro": "./img/advance-bio-cachorro.webp",
+        "advance bio cordero": "./img/advance-bio-cordero.webp",
+        "dog chow adultos razas pequenas": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Dog-Chow-Adultos-Minis-y-Peque%C3%B1os.jpg.webp", // Mantenemos URL original (falló descarga)
+        "dog chow adultos razas medianas": "./img/dog-chow-adultos-razas-medianas.webp",
+        "dogui cachorros": "./img/dogui-cachorros.webp",
+        "dogui carne": "./img/dogui-carne.webp",
+        "energy food adultos": "./img/energy-food-adultos.webp",
+        "energy food cachorros": "./img/energy-food-cachorros.webp",
+        "pipon pipon": "./img/pipon-pipon.webp",
+        "eukanuba adulto": "./img/eukanuba-adulto.webp",
+        "eukanuba adulto pequeno": "./img/eukanuba-adulto-pequeno.webp",
+        "eukanuba cachorro": "./img/eukanuba-cachorro.webp",
+        "excellent perro adulto m. pequena": "./img/excellent-perro-adulto-m-pequena.webp",
+        "excellent perro cachorro m. pequena": "./img/excellent-perro-cachorro-m-pequena.webp",
+        "fandog criadores": "./img/fandog-criadores.webp",
+        "guardian adulto": "./img/guardian-adulto.webp",
+        "guardian cachorro": "./img/guardian-cachorro.webp",
+        "nutricare ad. mordida grande": "./img/nutricare-ad-mordida-grande.webp",
+        "nutricare ad. mordida pequena": "./img/nutricare-ad-mordida-pequena.webp",
+        "old prince hipoalergenico": "./img/old-prince-hipoalergenico.webp",
+        "pedigree adultos carne": "./img/pedigree-adultos-carne.webp",
+        "pedigree adultos carne y vegetales": "./img/pedigree-adultos-carne-y-vegetales.webp",
+        "pedigree adultos razas pequenas": "./img/pedigree-adultos-razas-pequenas.webp",
+        "pedigree cachorros": "./img/pedigree-cachorros.webp",
+        "pedigree senior +7": "./img/pedigree-senior-7.webp",
+        "royal canin mini junior mini": "./img/royal-canin-mini-junior-mini.webp",
+        "royal canin mini adulto mini": "./img/royal-canin-mini-adulto-mini.webp",
+        "royal canin performance adulto": "./img/royal-canin-performance-adulto.webp",
+        "royal canin performance junior": "./img/royal-canin-performance-junior.webp",
+        "sabrositos mix perro": "./img/sabrositos-mix-perro.webp",
+        "sileoni": "./img/sileoni.webp",
+        "vital can premium adulto": "./img/vital-can-premium-adulto.webp",
+        "sieger": "./img/sieger.webp",
+        "gooster": "./img/gooster.webp",
+        "7 vidas": "./img/7-vidas.webp",
+        "advance bio gato adulto": "./img/advance-bio-gato-adulto.webp",
+        "advance bio gato urinary": "./img/advance-bio-gato-urinary.webp",
+        "agility gato adulto": "./img/agility-gato-adulto.webp",
+        "agility gato kitten": "./img/agility-gato-kitten.webp",
+        "agility gato urinary": "./img/agility-gato-urinary.webp",
+        "cat chow adulto carne": "./img/cat-chow-adulto-carne.webp",
+        "cat chow adulto pescado": "./img/cat-chow-adulto-pescado.webp",
+        "cat chow esterilizados": "./img/cat-chow-esterilizados.webp",
+        "cat chow gatitos": "./img/cat-chow-gatitos.webp",
+        "energy food gato": "./img/energy-food-gato.webp",
+        "excellent adult cat": "./img/excellent-adult-cat.webp",
+        "excelent kitten": "./img/excelent-kitten.webp",
+        "excellent urinary adult cat": "./img/excellent-urinary-adult-cat.webp",
+        "gati carne y pollo": "./img/gati-carne-y-pollo.webp",
+        "gati pescado y salmon": "./img/gati-pescado-y-salmon.webp",
+        "guardian gato adulto": "./img/guardian-gato-adulto.webp",
+        "royal canin fit 32": "./img/royal-canin-fit-32.webp",
+        "royal canin performance adult gato": "./img/royal-canin-performance-adult-gato.webp",
+        "royal canin performance gato kitten": "./img/royal-canin-performance-gato-kitten.webp",
+        "royal canin urinary": "./img/royal-canin-urinary.webp",
+        "sabrositos mix gato": "./img/sabrositos-mix-gato.webp",
+        "vital can complete kitten": "./img/vital-can-complete-kitten.webp",
+        "vital can complete gato adulto": "./img/vital-can-complete-gato-adulto.webp",
+        "whiskas carne": "./img/whiskas-carne.webp",
+        "whiskas pescado": "./img/whiskas-pescado.webp",
+        "whiskas pollo": "./img/whiskas-pollo.webp",
+        "arroz saborizado": "./img/arroz-saborizado.webp",
+    };
+
+    const brandImages = {
+        "royal": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Royal_Canin_logo.svg/300px-Royal_Canin_logo.svg.png",
+        "pedigree": "https://1000marcas.net/wp-content/uploads/2021/06/Pedigree-Logo.png",
+        "whiskas": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Whiskas_Logo.svg/300px-Whiskas_Logo.svg.png",
+        "gati": "https://d22fxaf9t8d39k.cloudfront.net/60df9370accc82d7c0e78263724c9b207e865f6003759902cf6993c107567c9c90287.png",
+        "dogui": "https://seeklogo.com/images/D/dogui-logo-227B23B75C-seeklogo.com.png",
+        "raza": "https://www.grupo-molino.com/wp-content/uploads/2020/09/raza-logo.png",
+        "eukanuba": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Eukanuba_logo.svg/300px-Eukanuba_logo.svg.png",
+        "pro plan": "https://1000marcas.net/wp-content/uploads/2021/06/Purina-Pro-Plan-logo.png",
+        "excellent": "https://www.purina-latam.com/sites/g/files/auxxlc391/files/styles/kraken_generic_max_width_500/public/2021-02/Purina%20Excellent%20Logo.png",
+        "old prince": "https://oldprince.com.ar/assets/images/logo_op.png",
+        "sieger": "https://sieger.com.ar/wp-content/uploads/2019/08/logo-sieger.png",
+        "pipon": "https://static.wixstatic.com/media/893c12_3c003250005747449520443423759727~mv2.png",
+        "advance": "https://advancebio.com.ar/wp-content/uploads/2024/09/logo-advance-bio-1.svg",
+        "agility": "https://agility.com.ar/wp-content/uploads/2020/09/Logo-Agility.png",
+        "dog chow": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2021-02/Dog%20Chow%20Logo.png.webp"
+    };
+
+    let allProducts = [];
+    let cart = [];
+    let currentCategory = 'all';
+
+    document.getElementById('supportBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hola Peluditos! Tengo una consulta...")}`;
+    
+    // INICIALIZACION
+    window.onload = function() { 
+        initTheme();
+        loadCart(); 
+        fetchData(); 
+    };
+
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            updateThemeIcon('dark');
+        }
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const target = current === 'dark' ? 'light' : 'dark';
+        
+        if (target === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+        } else {
+            html.removeAttribute('data-theme');
+        }
+        
+        localStorage.setItem('theme', target);
+        updateThemeIcon(target);
+    }
+
+    function updateThemeIcon(theme) {
+        const icon = document.querySelector('#themeBtn i');
+        if (theme === 'dark') {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    }
+
+    function fetchData() {
+        Papa.parse(GOOGLE_SHEET_URL, {
+            download: true, header: false,
+            complete: function(results) {
+                processData(results.data);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('product-grid').style.display = 'grid';
+            },
+            error: function() { 
+                 document.getElementById('loader').innerHTML = `<div class="error-msg">Error cargando precios.</div>`;
+            }
+        });
+    }
+
+    function roundToCustomRule(value) {
+        if (!value) return 0;
+        let integerVal = Math.round(value); 
+        let remainder = integerVal % 100;
+        return remainder <= 50 ? integerVal - remainder : integerVal + (100 - remainder);
+    }
+
+    function getImageForProduct(name) {
+        const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        const lowerName = normalize(name);
+        const customKeys = Object.keys(customImages).sort((a, b) => b.length - a.length);
+        for (const key of customKeys) { if (lowerName.includes(key)) return customImages[key]; }
+        for (const [brand, url] of Object.entries(brandImages)) { if (lowerName.includes(brand.toLowerCase())) return url; }
+        return null;
+    }
+
+    function cleanProductName(name) {
+        if (!name) return "";
+        let clean = name.replace(/['"]/g, ''); 
+        clean = clean.replace(/\b(perro|gato|perros|gatos)\b/gi, '').replace(/\s+/g, ' ').trim();
+        return clean;
+    }
+
+    function processData(rows) {
+        allProducts = [];
+        for (let i = 5; i < rows.length; i++) {
+            const row = rows[i];
+            let nombreRaw = row[2];
+            if (!nombreRaw || nombreRaw.includes("DESCRIPCION")) continue;
+
+            const weightRaw = row[3];
+            const weight = (weightRaw && weightRaw.toString().trim() !== '') ? weightRaw : null;
+            let imgUrl = row[10] && row[10].startsWith('http') ? row[10] : getImageForProduct(nombreRaw);
+
+            const cleanPrice = (val) => {
+                if (!val) return 0;
+                let cleaned = val.toString().replace(/[$.]/g, '').replace(',', '.').replace(/[^\d.]/g, '');
+                return roundToCustomRule(parseFloat(cleaned) || 0);
+            };
+
+            const precioKg = cleanPrice(row[8]);
+            const precioBolsa = cleanPrice(row[9]);
+
+            if (precioKg <= 0 && precioBolsa <= 0) continue;
+
+            const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            const lowerName = normalize(nombreRaw);
+            
+            let category = 'otros';
+            let catLabel = ''; 
+
+            if (lowerName.match(/gato|cat|kitten|gati|whiskas|felino|7 vidas|fit 32|urinary/)) {
+                category = 'gato';
+                catLabel = 'Gato';
+            }
+            else if (lowerName.match(/perro|dog|cachorro|adulto|raza|pedigree|dogui|canino|advance|nutricare|old prince|sieger|pipon|gooster|junior|mini|medium|maxi|mordida|sileoni/)) {
+                category = 'perro';
+                catLabel = 'Perro';
+            }
+
+            const displayName = cleanProductName(nombreRaw);
+
+            allProducts.push({
+                nombre: displayName, 
+                originalName: nombreRaw, 
+                weight: weight,
+                imgUrl: imgUrl, 
+                precioKg: precioKg > 0 ? precioKg : null,
+                precioBolsa: precioBolsa > 0 ? precioBolsa : null,
+                category: category,
+                catLabel: catLabel, 
+                isOffer: lowerName.includes('oferta') || lowerName.includes('promo')
+            });
+        }
+        applyFilters();
+    }
+
+    function setCategory(cat, btn) {
+        currentCategory = cat;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+        });
+        if(btn) {
+            btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+        }
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const grid = document.getElementById('product-grid');
+        grid.innerHTML = '';
+
+        const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        const filtered = allProducts.filter(p => {
+            const matchCat = currentCategory === 'all' || p.category === currentCategory;
+            const matchSearch = normalize(p.originalName).includes(normalize(term));
+            return matchCat && matchSearch;
+        });
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-light);">No encontramos resultados 🐶🐱</div>';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        filtered.forEach(p => {
+            const card = document.createElement('article');
+            card.className = 'card';
+            
+            let badgeHtml = '';
+            if(p.isOffer) badgeHtml += `<div class="offer-badge">OFERTA</div>`;
+            
+            let catLabelHtml = p.catLabel ? `<span class="category-label horizontal">${p.catLabel}</span>` : '';
+
+            let imgHtml;
+            const safeAlt = p.nombre.replace(/"/g, '"');
+            
+            if (p.imgUrl) {
+                // OPTIMIZACIÓN: decoding="async" y referrerPolicy para evitar cookies de terceros
+                imgHtml = `<div class="card-img-container">
+                               ${badgeHtml}
+                               <img src="${p.imgUrl}" alt="${safeAlt}" class="product-img" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="200" height="200" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                               <i class="fa-solid fa-paw placeholder-icon" style="display:none"></i>
+                               ${catLabelHtml}
+                           </div>`;
+            } else {
+                let iconClass = p.category === 'perro' ? 'fa-dog' : (p.category === 'gato' ? 'fa-cat' : 'fa-bag-shopping');
+                imgHtml = `<div class="card-img-container">
+                                ${badgeHtml}
+                                <i class="fa-solid ${iconClass} placeholder-icon"></i>
+                                ${catLabelHtml}
+                           </div>`;
+            }
+
+            let pricesHtml = '';
+            const fmt = n => n.toLocaleString('es-AR');
+            const jsSafeName = p.nombre.replace(/'/g, "\\'");
+
+            if (p.precioKg) {
+                pricesHtml += `
+                <div class="price-option">
+                    <div class="price-info">
+                        <span class="price-label">x Kg Suelto</span>
+                        <span class="price-amount">$${fmt(p.precioKg)}</span>
+                    </div>
+                    <button class="btn-add" onclick="addToCart('${jsSafeName}', 'Kg', ${p.precioKg})" aria-label="Agregar ${safeAlt} por kilo al carrito">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>`;
+            }
+            if (p.precioBolsa) {
+                const labelBolsa = p.weight ? `Bolsa ${p.weight} Kg` : 'Bolsa Cerrada';
+                pricesHtml += `
+                <div class="price-option">
+                    <div class="price-info">
+                        <span class="price-label">${labelBolsa}</span>
+                        <span class="price-amount">$${fmt(p.precioBolsa)}</span>
+                    </div>
+                    <button class="btn-add" onclick="addToCart('${jsSafeName}', 'Bolsa', ${p.precioBolsa})" aria-label="Agregar ${safeAlt} bolsa al carrito">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>`;
+            }
+
+            card.innerHTML = `
+                ${imgHtml}
+                <div style="flex:1; display:flex; flex-direction:column;">
+                    <div class="card-header">
+                        <h2 class="card-title">${p.nombre}</h2>
+                    </div>
+                    <div class="card-body">
+                        ${pricesHtml}
+                    </div>
+                </div>
+            `;
+            fragment.appendChild(card);
+        });
+        
+        grid.appendChild(fragment);
+    }
+
+    function saveCart() { localStorage.setItem('peluditos_cart', JSON.stringify(cart)); }
+    function loadCart() { const saved = localStorage.getItem('peluditos_cart'); if (saved) { cart = JSON.parse(saved); updateCartUI(); } }
+    
+    function addToCart(name, type, price) {
+        const existing = cart.find(i => i.name === name && i.type === type);
+        if (existing) existing.qty++; else cart.push({ name, type, price, qty: 1 });
+        saveCart(); updateCartUI();
+        const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500, background: 'var(--white)', color: 'var(--text)' });
+        Toast.fire({ icon: 'success', title: 'Agregado' });
+    }
+    
+    function changeQty(index, delta) { cart[index].qty += delta; if (cart[index].qty <= 0) cart.splice(index, 1); saveCart(); updateCartUI(); }
+    
+    function updateCartUI() {
+        const container = document.getElementById('cart-items'); const totalEl = document.getElementById('cart-total'); const countEl = document.getElementById('cart-count');
+        container.innerHTML = ''; let total = 0, count = 0;
+        if(cart.length === 0) container.innerHTML = '<p style="text-align:center; color:var(--text-light); margin-top:50px;">Tu carrito está vacío 🦴</p>';
+        cart.forEach((item, index) => {
+            total += item.price * item.qty; count += item.qty;
+            container.innerHTML += `<div class="cart-item"><div style="flex-grow:1"><div style="font-weight:600; font-size:0.9rem; text-transform:capitalize;">${item.name.toLowerCase()}</div><div style="font-size:0.8rem; color:var(--text-light);">${item.type} x $${item.price.toLocaleString('es-AR')}</div></div><div class="qty-control"><button class="qty-btn" onclick="changeQty(${index}, -1)" aria-label="Disminuir cantidad">-</button><span>${item.qty}</span><button class="qty-btn" onclick="changeQty(${index}, 1)" aria-label="Aumentar cantidad">+</button></div></div>`;
+        });
+        totalEl.innerText = `$${total.toLocaleString('es-AR')}`; countEl.innerText = count; countEl.style.display = count > 0 ? 'flex' : 'none';
+    }
+    
+    function toggleCart() { document.getElementById('cart-modal').classList.toggle('active'); document.getElementById('cart-overlay').classList.toggle('active'); }
+    
+    function checkout() {
+        if (cart.length === 0) return Swal.fire({ title: 'Ups', text: 'El carrito está vacío', icon: 'warning', background: 'var(--white)', color: 'var(--text)' });
+        let msg = "Hola Peluditos! 🐾 Quiero pedir:\n\n"; let total = 0;
+        cart.forEach(i => { let sub = i.price * i.qty; total += sub; msg += `▪️ ${i.qty} x ${i.name} (${i.type}) = $${sub.toLocaleString('es-AR')}\n`; });
+        msg += `\n*TOTAL: $${total.toLocaleString('es-AR')}*\n\n¿Tienen stock? Gracias!`;
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+</script>
+
+</body>
+</html>
