@@ -31,7 +31,6 @@
             --btn-bg: #f0f0f0; --card-radius: 16px;
             --shadow: 0 4px 12px rgba(0,0,0,0.04);
             --shadow-header: 0 2px 15px rgba(0,0,0,0.05);
-            --blue-btn: #2563EB; /* Color azul para botones secundarios */
         }
 
         [data-theme="dark"] {
@@ -192,7 +191,7 @@
             <div class="search-row">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="searchInput" placeholder="Buscar marca..." onkeyup="applyFilters()">
+                    <input type="text" id="searchInput" placeholder="Buscar marca, piedras..." onkeyup="applyFilters()">
                 </div>
                 <select id="priceSort" class="sort-select" onchange="applyFilters()">
                     <option value="default">Relevancia</option>
@@ -484,7 +483,7 @@
     // INICIALIZACION
     window.onload = function() { 
         initTheme();
-        loadUserSession(); // Carga usuario y historial
+        loadUserSession(); 
         loadCart(); 
         fetchData(); 
     };
@@ -496,7 +495,6 @@
         if (storedUser) {
             currentUser = JSON.parse(storedUser);
             updateUserUI(true);
-            // Cargar historial
             const storedHistory = localStorage.getItem('peluditos_history_' + currentUser.phone);
             userHistory = storedHistory ? JSON.parse(storedHistory) : [];
         } else {
@@ -508,7 +506,6 @@
         const btn = document.getElementById('user-btn-display');
         if (isLoggedIn) {
             btn.innerHTML = `<i class="fa-solid fa-user"></i> <span>${currentUser.name.split(' ')[0]}</span>`;
-            // Rellenar Modal Perfil
             document.getElementById('profile-name').innerText = currentUser.name;
             document.getElementById('profile-phone').innerText = "+54 " + currentUser.phone;
             document.getElementById('profile-initial').innerText = currentUser.name.charAt(0).toUpperCase();
@@ -524,7 +521,6 @@
             document.getElementById('profile-modal').classList.add('active');
             document.getElementById('cart-overlay').classList.add('active');
         } else {
-            // Resetear form login
             document.getElementById('step-phone').classList.remove('hidden');
             document.getElementById('step-name').classList.add('hidden');
             document.getElementById('login-phone').value = '';
@@ -541,20 +537,13 @@
             return;
         }
 
-        // Simular búsqueda en base de datos local
-        // Nota: Como no hay backend, buscamos si este navegador ya conoce este telefono
-        // O implementamos un registro simple en este navegador.
-        
-        // Estrategia: Guardamos usuarios en un objeto 'peluditos_users_db' en localStorage
         let usersDB = JSON.parse(localStorage.getItem('peluditos_users_db')) || {};
         
         if (usersDB[phoneInput]) {
-            // Usuario existe
             currentUser = usersDB[phoneInput];
             localStorage.setItem('peluditos_user', JSON.stringify(currentUser));
             finishLogin();
         } else {
-            // Usuario Nuevo -> Pedir Nombre
             document.getElementById('step-phone').classList.add('hidden');
             document.getElementById('step-name').classList.remove('hidden');
             setTimeout(() => document.getElementById('login-name').focus(), 300);
@@ -571,16 +560,11 @@
         }
 
         const newUser = { phone, name, joined: new Date().toISOString() };
-        
-        // Guardar en "DB" local
         let usersDB = JSON.parse(localStorage.getItem('peluditos_users_db')) || {};
         usersDB[phone] = newUser;
         localStorage.setItem('peluditos_users_db', JSON.stringify(usersDB));
-        
-        // Setear sesión actual
         currentUser = newUser;
         localStorage.setItem('peluditos_user', JSON.stringify(currentUser));
-        
         finishLogin();
     }
 
@@ -614,11 +598,9 @@
         }
 
         let html = '';
-        // Mostrar últimos primero
         [...userHistory].reverse().forEach((order, idx) => {
             const date = new Date(order.date).toLocaleDateString('es-AR');
             const itemsSummary = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
-            // El índice real en el array original es: userHistory.length - 1 - idx
             const realIdx = userHistory.length - 1 - idx;
             
             html += `
@@ -643,25 +625,19 @@
         const order = userHistory[idx];
         if (!order) return;
         
-        // Agregar items al carrito
         order.items.forEach(item => {
-            // Verificar si ya existe para sumar o agregar
             const existing = cart.find(c => c.name === item.name && c.type === item.type);
-            if (existing) {
-                existing.qty += item.qty;
-            } else {
-                cart.push({ ...item }); // Clonar objeto
-            }
+            if (existing) { existing.qty += item.qty; } else { cart.push({ ...item }); }
         });
         
         saveCart();
         updateCartUI();
         closeAllModals();
-        toggleCart(); // Abrir carrito para ver
+        toggleCart(); 
         Swal.fire({ title: 'Productos agregados', icon: 'success', toast: true, position: 'bottom-end', timer: 1500, showConfirmButton: false });
     }
 
-    // --- CORE FUNCTIONS (Themes, Data, Filters) ---
+    // --- CORE FUNCTIONS ---
 
     function initTheme() {
         const savedTheme = localStorage.getItem('theme');
@@ -722,8 +698,15 @@
         return clean;
     }
 
-function processData(rows) {
+    function processData(rows) {
         allProducts = [];
+        // DEFINICIÓN DE CLEANPRICE DENTRO DE LA FUNCIÓN PARA EVITAR ERRORES DE SCOPE
+        const cleanPrice = (val) => {
+            if (!val) return 0;
+            let cleaned = val.toString().replace(/[$.]/g, '').replace(',', '.').replace(/[^\d.]/g, '');
+            return roundToCustomRule(parseFloat(cleaned) || 0);
+        };
+
         for (let i = 5; i < rows.length; i++) {
             const row = rows[i];
             let nombreRaw = row[2];
@@ -733,14 +716,11 @@ function processData(rows) {
             const weight = (weightRaw && weightRaw.toString().trim() !== '') ? weightRaw : null;
             
             // --- CORRECCIÓN DE COLUMNAS AQUI ---
-            // Antes row[8] y row[9]. Ahora row[7] (Col H) y row[8] (Col I)
             const precioKg = cleanPrice(row[7]);   // Columna H (Suelto)
             const precioBolsa = cleanPrice(row[8]); // Columna I (Bolsa/Unidad)
             
-            // Mantenemos la imagen en Columna K (row[10]) o buscamos automática
             let imgUrl = row[10] && row[10].startsWith('http') ? row[10] : getImageForProduct(nombreRaw);
 
-            // Si no hay precios, saltamos
             if (precioKg <= 0 && precioBolsa <= 0) continue;
 
             const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -749,11 +729,11 @@ function processData(rows) {
             let category = 'otros';
             let catLabel = ''; 
             
-            // Categorización automática
             if (lowerName.match(/gato|cat|kitten|gati|whiskas|felino|7 vidas|fit 32|urinary/)) { category = 'gato'; catLabel = 'Gato'; }
             else if (lowerName.match(/perro|dog|cachorro|adulto|raza|pedigree|dogui|canino|advance|nutricare|old prince|sieger|pipon|gooster|junior|mini|medium|maxi|mordida|sileoni/)) { category = 'perro'; catLabel = 'Perro'; }
             
-            // Excepciones para que Piedras/Sobres no se confundan de categoría
+            // Excepción para piedras y sobres: forzar categoría 'otros' o simplemente no mostrar como suelto
+            // Al categorizar como 'otros', evitamos iconos de perro/gato si no aplica
             if (lowerName.match(/piedra|arena|sanitaria|sobre|pouch|lata|humedo/)) { category = 'otros'; catLabel = ''; }
 
             allProducts.push({
@@ -770,6 +750,7 @@ function processData(rows) {
         }
         applyFilters();
     }
+
     function setCategory(cat, btn) {
         currentCategory = cat;
         document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
@@ -809,18 +790,39 @@ function processData(rows) {
             const card = document.createElement('article'); card.className = 'card';
             let badgeHtml = p.isOffer ? `<div class="offer-badge">OFERTA</div>` : '';
             let catLabelHtml = p.catLabel ? `<span class="category-label horizontal">${p.catLabel}</span>` : '';
+            
+            // Icono por defecto
+            let defaultIcon = 'fa-bag-shopping';
+            if (p.category === 'perro') defaultIcon = 'fa-dog';
+            if (p.category === 'gato') defaultIcon = 'fa-cat';
+
             let imgHtml = p.imgUrl ? 
                 `<div class="card-img-container">${badgeHtml}<img src="${p.imgUrl}" alt="${p.nombre}" class="product-img" loading="lazy" width="200" height="200" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><i class="fa-solid fa-paw placeholder-icon" style="display:none"></i>${catLabelHtml}</div>` : 
-                `<div class="card-img-container">${badgeHtml}<i class="fa-solid ${p.category === 'perro' ? 'fa-dog' : (p.category === 'gato' ? 'fa-cat' : 'fa-bag-shopping')} placeholder-icon"></i>${catLabelHtml}</div>`;
+                `<div class="card-img-container">${badgeHtml}<i class="fa-solid ${defaultIcon} placeholder-icon"></i>${catLabelHtml}</div>`;
             
             let pricesHtml = '';
             const fmt = n => n.toLocaleString('es-AR');
             const jsSafeName = p.nombre.replace(/'/g, "\\'");
             
-            if (p.precioKg) pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">x Kg Suelto</span><span class="price-amount">$${fmt(p.precioKg)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', 'Kg', ${p.precioKg})"><i class="fa-solid fa-plus"></i></button></div>`;
+            // Precio Suelto
+            if (p.precioKg) {
+                pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">x Kg Suelto</span><span class="price-amount">$${fmt(p.precioKg)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', 'Kg', ${p.precioKg})"><i class="fa-solid fa-plus"></i></button></div>`;
+            }
+            
+            // Precio Bolsa/Unidad
             if (p.precioBolsa) {
-                const labelBolsa = p.weight ? `Bolsa ${p.weight} Kg` : 'Bolsa Cerrada';
-                pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">${labelBolsa}</span><span class="price-amount">$${fmt(p.precioBolsa)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', 'Bolsa', ${p.precioBolsa})"><i class="fa-solid fa-plus"></i></button></div>`;
+                let labelBolsa = 'Unidad';
+                if (p.weight) {
+                    const isNumber = !isNaN(parseFloat(p.weight)) && isFinite(p.weight);
+                    // Si es categoría 'otros' (piedras/sobres) o texto (ej: Pack), usar texto directo
+                    if (!isNumber || p.category === 'otros') {
+                        labelBolsa = p.weight; 
+                    } else {
+                        labelBolsa = `Bolsa ${p.weight} Kg`;
+                    }
+                }
+
+                pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">${labelBolsa}</span><span class="price-amount">$${fmt(p.precioBolsa)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', '${labelBolsa}', ${p.precioBolsa})"><i class="fa-solid fa-plus"></i></button></div>`;
             }
 
             card.innerHTML = `${imgHtml}<div style="flex:1; display:flex; flex-direction:column;"><div class="card-header"><h2 class="card-title">${p.nombre}</h2></div><div class="card-body">${pricesHtml}</div></div>`;
@@ -928,31 +930,21 @@ function processData(rows) {
         msg += `💳 *Pago:* ${paymentType.toUpperCase()}\n`;
         if(obs) msg += `📝 *Nota:* ${obs}\n`;
 
-        // GUARDAR EN HISTORIAL (si está logueado, o si usa el mismo cel, lo auto-logueamos "soft")
-        // Como simplificación, solo guardamos si ya hay currentUser, o usamos el telefono ingresado para guardar
         if (!currentUser) {
-             // Crear registro rapido solo para guardar historial localmente sin nombre si no se logueo antes
-             // (Opcional: forzar registro. Aquí lo dejamos pasar y guardamos en un historial temporal asociado al telefono)
-             // Para consistencia con el pedido, no creamos usuario completo, pero guardamos historial bajo ese telefono
+             // Podríamos guardar usuario temporal aquí
         }
         
-        // Guardar historial bajo el teléfono ingresado
         const orderRecord = { date: new Date().toISOString(), items: [...cart], total: total };
-        let historyKey = 'peluditos_history_' + phone.replace(/\D/g,''); // Sanitizar
+        let historyKey = 'peluditos_history_' + phone.replace(/\D/g,'');
         let currentHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
         currentHistory.push(orderRecord);
         localStorage.setItem(historyKey, JSON.stringify(currentHistory));
         
-        // Si el usuario actual coincide, recargar su historial en UI
         if (currentUser && currentUser.phone === phone) {
             userHistory = currentHistory;
-            // No renderizamos, se renderiza al abrir perfil
         }
 
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
-        
-        // Opcional: Vaciar carrito?
-        // cart = []; saveCart(); updateCartUI(); location.reload();
     }
 </script>
 
