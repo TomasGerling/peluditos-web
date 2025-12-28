@@ -7,7 +7,7 @@ let allProducts = [];
 let cart = [];
 let currentCategory = 'all';
 
-// USUARIO LOCAL (Login System)
+// USUARIO LOCAL
 let currentUser = null; 
 let userHistory = []; 
 
@@ -104,13 +104,57 @@ document.getElementById('supportBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?t
 // INICIALIZACION
 window.onload = function() { 
     initTheme();
+    updateShopStatus(); // Chequea horario
     loadUserSession(); 
     loadCart(); 
     fetchData(); 
 };
 
-// --- SISTEMA DE USUARIOS Y LOGIN (Local Storage) ---
+// --- FUNCIÓN NUEVA: HORARIOS ---
+function updateShopStatus() {
+    const now = new Date();
+    const day = now.getDay(); // 0 Domingo, 1 Lunes...
+    const minutes = now.getHours() * 60 + now.getMinutes();
 
+    const morningStart = 9 * 60;        // 09:00 -> 540
+    const morningEnd = 13 * 60;         // 13:00 -> 780
+    const afternoonStart = 16 * 60 + 30; // 16:30 -> 990
+    const afternoonEnd = 20 * 60 + 30;   // 20:30 -> 1230
+
+    let isOpen = false;
+    let text = "Cerrado";
+
+    // Si es Lunes a Sábado
+    if (day >= 1 && day <= 6) {
+        if ((minutes >= morningStart && minutes < morningEnd) ||
+            (minutes >= afternoonStart && minutes < afternoonEnd)) {
+            isOpen = true;
+            text = "Abierto Ahora";
+        } else {
+            // Lógica inteligente de "Abre a las..."
+            if (minutes < morningStart) text = "Abre 09:00hs";
+            else if (minutes >= morningEnd && minutes < afternoonStart) text = "Abre 16:30hs";
+            else text = "Cerrado";
+        }
+    } else {
+        // Domingo
+        text = "Cerrado (Domingo)";
+    }
+
+    const badge = document.getElementById('shop-status');
+    const badgeText = document.getElementById('status-text');
+    
+    badgeText.innerText = text;
+    if (isOpen) {
+        badge.classList.remove('closed');
+        badge.classList.add('open');
+    } else {
+        badge.classList.remove('open');
+        badge.classList.add('closed');
+    }
+}
+
+// --- SISTEMA DE USUARIOS ---
 function loadUserSession() {
     const storedUser = localStorage.getItem('peluditos_user');
     if (storedUser) {
@@ -154,12 +198,10 @@ function openLoginOrProfile() {
 function handleLoginCheck() {
     const phoneInput = document.getElementById('login-phone').value.trim();
     if (phoneInput.length < 8) {
-        Swal.fire({ text: 'Ingresa un número válido (sin 0 ni 15)', icon: 'warning', toast:true, position:'top', timer:2000, showConfirmButton:false });
+        Swal.fire({ text: 'Ingresa un número válido', icon: 'warning', toast:true, position:'top', timer:2000, showConfirmButton:false });
         return;
     }
-
     let usersDB = JSON.parse(localStorage.getItem('peluditos_users_db')) || {};
-    
     if (usersDB[phoneInput]) {
         currentUser = usersDB[phoneInput];
         localStorage.setItem('peluditos_user', JSON.stringify(currentUser));
@@ -174,12 +216,10 @@ function handleLoginCheck() {
 function handleRegister() {
     const phone = document.getElementById('login-phone').value.trim();
     const name = document.getElementById('login-name').value.trim();
-    
     if (name.length < 2) {
         Swal.fire({ text: 'Escribe tu nombre', icon: 'warning', toast:true, position:'top' });
         return;
     }
-
     const newUser = { phone, name, joined: new Date().toISOString() };
     let usersDB = JSON.parse(localStorage.getItem('peluditos_users_db')) || {};
     usersDB[phone] = newUser;
@@ -217,25 +257,18 @@ function renderHistory() {
         container.innerHTML = '<p style="text-align:center; color:var(--text-light); padding:20px;">Aún no tienes pedidos guardados.</p>';
         return;
     }
-
     let html = '';
     [...userHistory].reverse().forEach((order, idx) => {
         const date = new Date(order.date).toLocaleDateString('es-AR');
         const itemsSummary = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
         const realIdx = userHistory.length - 1 - idx;
-        
         html += `
         <div class="history-card">
-            <div class="history-header">
-                <span>Pedido #${1000 + realIdx}</span>
-                <span>${date}</span>
-            </div>
+            <div class="history-header"><span>Pedido #${1000 + realIdx}</span><span>${date}</span></div>
             <div class="history-items">${itemsSummary}</div>
             <div class="history-footer">
                 <span class="history-price">$${order.total.toLocaleString('es-AR')}</span>
-                <button class="btn-repeat" onclick="repeatOrder(${realIdx})">
-                    <i class="fa-solid fa-rotate-right"></i> Repetir
-                </button>
+                <button class="btn-repeat" onclick="repeatOrder(${realIdx})"><i class="fa-solid fa-rotate-right"></i> Repetir</button>
             </div>
         </div>`;
     });
@@ -245,21 +278,15 @@ function renderHistory() {
 function repeatOrder(idx) {
     const order = userHistory[idx];
     if (!order) return;
-    
     order.items.forEach(item => {
         const existing = cart.find(c => c.name === item.name && c.type === item.type);
         if (existing) { existing.qty += item.qty; } else { cart.push({ ...item }); }
     });
-    
-    saveCart();
-    updateCartUI();
-    closeAllModals();
-    toggleCart(); 
+    saveCart(); updateCartUI(); closeAllModals(); toggleCart(); 
     Swal.fire({ title: 'Productos agregados', icon: 'success', toast: true, position: 'bottom-end', timer: 1500, showConfirmButton: false });
 }
 
 // --- CORE FUNCTIONS ---
-
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -334,56 +361,37 @@ function processData(rows) {
 
         const weightRaw = row[3];
         const weight = (weightRaw && weightRaw.toString().trim() !== '') ? weightRaw : null;
-        
-        // --- LOGICA INTELIGENTE DE PRECIOS ---
         let valColH = cleanPrice(row[7]);
         let valColI = cleanPrice(row[8]);
-        
-        let precioKg = 0;
-        let precioBolsa = 0;
+        let precioKg = 0; let precioBolsa = 0;
 
         const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         const lowerName = normalize(nombreRaw);
         
-        let category = 'otros';
-        let catLabel = ''; 
-        
+        let category = 'otros'; let catLabel = ''; 
         if (lowerName.match(/gato|cat|kitten|gati|whiskas|felino|7 vidas|fit 32|urinary/)) { category = 'gato'; catLabel = 'Gato'; }
         else if (lowerName.match(/perro|dog|cachorro|adulto|raza|pedigree|dogui|canino|advance|nutricare|old prince|sieger|pipon|gooster|junior|mini|medium|maxi|mordida|sileoni/)) { category = 'perro'; catLabel = 'Perro'; }
         
         const isSpecial = lowerName.match(/piedra|arena|sanitaria|sobre|pouch|lata|humedo|golosina/);
-
         if (category === 'otros') {
             if (isSpecial) {
-                // CASO PIEDRAS/SOBRES: Unitario
                 category = 'otros'; catLabel = ''; 
                 precioBolsa = Math.max(valColH, valColI);
                 precioKg = 0;
             } else {
-                // CASO ARROZ/GRANEL OTROS: Invertir columnas
-                precioBolsa = valColH; 
-                precioKg = valColI;    
+                precioBolsa = valColH; precioKg = valColI;    
             }
         } else {
-            // CASO NORMAL
-            precioKg = valColH;
-            precioBolsa = valColI;
+            precioKg = valColH; precioBolsa = valColI;
         }
 
         let imgUrl = row[10] && row[10].startsWith('http') ? row[10] : getImageForProduct(nombreRaw);
-
         if (precioKg <= 0 && precioBolsa <= 0) continue;
 
         allProducts.push({
-            nombre: cleanProductName(nombreRaw), 
-            originalName: nombreRaw, 
-            weight: weight, 
-            imgUrl: imgUrl, 
-            precioKg: precioKg > 0 ? precioKg : null, 
-            precioBolsa: precioBolsa > 0 ? precioBolsa : null,
-            category: category, 
-            catLabel: catLabel, 
-            isOffer: lowerName.includes('oferta') || lowerName.includes('promo')
+            nombre: cleanProductName(nombreRaw), originalName: nombreRaw, weight: weight, imgUrl: imgUrl, 
+            precioKg: precioKg > 0 ? precioKg : null, precioBolsa: precioBolsa > 0 ? precioBolsa : null,
+            category: category, catLabel: catLabel, isOffer: lowerName.includes('oferta') || lowerName.includes('promo')
         });
     }
     applyFilters();
@@ -422,17 +430,14 @@ function applyFilters() {
     }
 
     if (filtered.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-light);">No encontramos resultados 🐶🐱</div>'; return; }
-
     const fragment = document.createDocumentFragment();
     filtered.forEach(p => {
         const card = document.createElement('article'); card.className = 'card';
         let badgeHtml = p.isOffer ? `<div class="offer-badge">OFERTA</div>` : '';
         let catLabelHtml = p.catLabel ? `<span class="category-label horizontal">${p.catLabel}</span>` : '';
-        
         let defaultIcon = 'fa-bag-shopping';
         if (p.category === 'perro') defaultIcon = 'fa-dog';
         if (p.category === 'gato') defaultIcon = 'fa-cat';
-
         let imgHtml = p.imgUrl ? 
             `<div class="card-img-container">${badgeHtml}<img src="${p.imgUrl}" alt="${p.nombre}" class="product-img" loading="lazy" width="200" height="200" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><i class="fa-solid fa-paw placeholder-icon" style="display:none"></i>${catLabelHtml}</div>` : 
             `<div class="card-img-container">${badgeHtml}<i class="fa-solid ${defaultIcon} placeholder-icon"></i>${catLabelHtml}</div>`;
@@ -444,21 +449,15 @@ function applyFilters() {
         if (p.precioKg) {
             pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">x Kg Suelto</span><span class="price-amount">$${fmt(p.precioKg)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', 'Kg', ${p.precioKg})"><i class="fa-solid fa-plus"></i></button></div>`;
         }
-        
         if (p.precioBolsa) {
             let labelBolsa = 'Unidad';
             if (p.weight) {
                 const isNumber = !isNaN(parseFloat(p.weight)) && isFinite(p.weight);
-                if (!isNumber || p.category === 'otros') {
-                    labelBolsa = p.weight; 
-                } else {
-                    labelBolsa = `Bolsa ${p.weight} Kg`;
-                }
+                if (!isNumber || p.category === 'otros') { labelBolsa = p.weight; } 
+                else { labelBolsa = `Bolsa ${p.weight} Kg`; }
             }
-
             pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">${labelBolsa}</span><span class="price-amount">$${fmt(p.precioBolsa)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', '${labelBolsa}', ${p.precioBolsa})"><i class="fa-solid fa-plus"></i></button></div>`;
         }
-
         card.innerHTML = `${imgHtml}<div style="flex:1; display:flex; flex-direction:column;"><div class="card-header"><h2 class="card-title">${p.nombre}</h2></div><div class="card-body">${pricesHtml}</div></div>`;
         fragment.appendChild(card);
     });
@@ -467,7 +466,6 @@ function applyFilters() {
 
 function saveCart() { localStorage.setItem('peluditos_cart', JSON.stringify(cart)); }
 function loadCart() { const saved = localStorage.getItem('peluditos_cart'); if (saved) { cart = JSON.parse(saved); updateCartUI(); } }
-
 function addToCart(name, type, price) {
     const existing = cart.find(i => i.name === name && i.type === type);
     if (existing) existing.qty++; else cart.push({ name, type, price, qty: 1 });
@@ -475,9 +473,7 @@ function addToCart(name, type, price) {
     const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500, background: 'var(--white)', color: 'var(--text)' });
     Toast.fire({ icon: 'success', title: 'Agregado' });
 }
-
 function changeQty(index, delta) { cart[index].qty += delta; if (cart[index].qty <= 0) cart.splice(index, 1); saveCart(); updateCartUI(); }
-
 function updateCartUI() {
     const container = document.getElementById('cart-items'); const totalEl = document.getElementById('cart-total'); const countEl = document.getElementById('cart-count');
     container.innerHTML = ''; let total = 0, count = 0;
@@ -488,90 +484,42 @@ function updateCartUI() {
     });
     totalEl.innerText = `$${total.toLocaleString('es-AR')}`; countEl.innerText = count; countEl.style.display = count > 0 ? 'flex' : 'none';
 }
-
-function toggleCart() { 
-    closeAllModals(); 
-    document.getElementById('cart-modal').classList.add('active'); 
-    document.getElementById('cart-overlay').classList.add('active'); 
-}
-
-function closeAllModals() {
-    document.querySelectorAll('.cart-modal').forEach(m => m.classList.remove('active'));
-    document.getElementById('cart-overlay').classList.remove('active');
-}
+function toggleCart() { closeAllModals(); document.getElementById('cart-modal').classList.add('active'); document.getElementById('cart-overlay').classList.add('active'); }
+function closeAllModals() { document.querySelectorAll('.cart-modal').forEach(m => m.classList.remove('active')); document.getElementById('cart-overlay').classList.remove('active'); }
 
 function checkout() {
     if (cart.length === 0) return Swal.fire({ title: 'Ups', text: 'El carrito está vacío', icon: 'warning', background: 'var(--white)', color: 'var(--text)' });
     closeAllModals();
-    
-    const deliveryOpt = document.getElementById('opt-delivery');
-    const deliveryText = document.getElementById('delivery-text');
-    
+    const deliveryOpt = document.getElementById('opt-delivery'); const deliveryText = document.getElementById('delivery-text');
     if (!ENABLE_DELIVERY) { deliveryOpt.disabled = true; deliveryText.innerText = "(No disponible)"; } 
     else { deliveryOpt.disabled = false; deliveryText.innerText = "Envío a domicilio"; }
-
-    if (currentUser) {
-        document.getElementById('cx-name').value = currentUser.name;
-        document.getElementById('cx-phone').value = currentUser.phone;
-    }
-
-    document.getElementById('checkout-modal').classList.add('active');
-    document.getElementById('cart-overlay').classList.add('active'); 
+    if (currentUser) { document.getElementById('cx-name').value = currentUser.name; document.getElementById('cx-phone').value = currentUser.phone; }
+    document.getElementById('checkout-modal').classList.add('active'); document.getElementById('cart-overlay').classList.add('active'); 
 }
-
-function closeCheckout() {
-    document.getElementById('checkout-modal').classList.remove('active');
-    document.getElementById('cart-modal').classList.add('active');
-}
-
-function toggleAddress(show) {
-    const section = document.getElementById('address-section');
-    if (show) section.classList.remove('hidden'); else section.classList.add('hidden');
-}
+function closeCheckout() { document.getElementById('checkout-modal').classList.remove('active'); document.getElementById('cart-modal').classList.add('active'); }
+function toggleAddress(show) { const section = document.getElementById('address-section'); if (show) section.classList.remove('hidden'); else section.classList.add('hidden'); }
 
 function sendOrder() {
-    const name = document.getElementById('cx-name').value;
-    const phone = document.getElementById('cx-phone').value;
+    const name = document.getElementById('cx-name').value; const phone = document.getElementById('cx-phone').value;
     if (!name || !phone) return Swal.fire({ title: 'Faltan datos', text: 'Por favor completa nombre y teléfono', icon: 'error' });
-
     const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
     const paymentType = document.querySelector('input[name="paymentType"]:checked').value;
     const obs = document.getElementById('cx-obs').value;
-
     let addressText = "";
     if (deliveryType === 'delivery') {
-        const calle = document.getElementById('cx-calle').value;
-        const extra = document.getElementById('cx-piso').value;
-        const entre = document.getElementById('cx-entre').value;
+        const calle = document.getElementById('cx-calle').value; const extra = document.getElementById('cx-piso').value; const entre = document.getElementById('cx-entre').value;
         if (!calle) return Swal.fire({ text: 'Por favor indica la dirección de entrega', icon: 'warning' });
-        addressText = `📍 *Envío a:* ${calle} ${extra ? '('+extra+')' : ''}\n`;
-        if(entre) addressText += `   Entre: ${entre}\n`;
-    } else {
-        addressText = `🏪 *Retiro en Local*\n`;
-    }
-
-    let msg = `Hola Peluditos! 👋 Soy *${name}*.\n`;
-    msg += `📞 Tel: ${phone}\n\n`;
-    msg += `📋 *MI PEDIDO:*\n`;
-    
-    let total = 0;
-    cart.forEach(i => { let sub = i.price * i.qty; total += sub; msg += `▪️ ${i.qty} x ${i.name} (${i.type}) = $${sub.toLocaleString('es-AR')}\n`; });
-    
-    msg += `\n💰 *TOTAL: $${total.toLocaleString('es-AR')}*\n`;
-    msg += `------------------\n`;
-    msg += addressText;
-    msg += `💳 *Pago:* ${paymentType.toUpperCase()}\n`;
-    if(obs) msg += `📝 *Nota:* ${obs}\n`;
-
+        addressText = `📍 *Envío a:* ${calle} ${extra ? '('+extra+')' : ''}\n`; if(entre) addressText += `   Entre: ${entre}\n`;
+    } else { addressText = `🏪 *Retiro en Local*\n`; }
+    let msg = `Hola Peluditos! 👋 Soy *${name}*.\n`; msg += `📞 Tel: ${phone}\n\n`; msg += `📋 *MI PEDIDO:*\n`;
+    let total = 0; cart.forEach(i => { let sub = i.price * i.qty; total += sub; msg += `▪️ ${i.qty} x ${i.name} (${i.type}) = $${sub.toLocaleString('es-AR')}\n`; });
+    msg += `\n💰 *TOTAL: $${total.toLocaleString('es-AR')}*\n`; msg += `------------------\n`;
+    msg += addressText; msg += `💳 *Pago:* ${paymentType.toUpperCase()}\n`; if(obs) msg += `📝 *Nota:* ${obs}\n`;
     const orderRecord = { date: new Date().toISOString(), items: [...cart], total: total };
     let historyKey = 'peluditos_history_' + phone.replace(/\D/g,'');
     let currentHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
     currentHistory.push(orderRecord);
     localStorage.setItem(historyKey, JSON.stringify(currentHistory));
-    
-    if (currentUser && currentUser.phone === phone) {
-        userHistory = currentHistory;
-    }
-
+    if (currentUser && currentUser.phone === phone) { userHistory = currentHistory; }
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }

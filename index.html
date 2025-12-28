@@ -25,16 +25,20 @@
 <body>
 
 <header>
-    <a href="#" class="logo" onclick="location.reload()" aria-label="Recargar página">
+    <a href="#" class="logo" onclick="location.reload()">
         <i class="fa-solid fa-paw"></i> Peluditos
     </a>
     
     <div class="header-actions">
+        <div id="shop-status" class="status-badge closed">
+            <span class="status-circle"></span> <span id="status-text">Cerrado</span>
+        </div>
+
         <button id="user-btn-display" class="user-btn" onclick="openLoginOrProfile()">
             <i class="fa-regular fa-user"></i> <span>Ingresar</span>
         </button>
 
-        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar modo oscuro" id="themeBtn">
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
             <i class="fa-solid fa-moon"></i>
         </button>
     </div>
@@ -192,7 +196,6 @@
     </div>
     <div class="cart-items login-content">
         <p style="color:var(--text-light); margin-bottom:20px;">Ingresa tu número de teléfono para acceder a tu historial y repetir pedidos.</p>
-        
         <div id="step-phone">
             <label class="form-label" style="text-align:left">Número de teléfono</label>
             <div class="phone-input-group">
@@ -201,7 +204,6 @@
             </div>
             <button class="login-btn-primary" onclick="handleLoginCheck()">Continuar</button>
         </div>
-
         <div id="step-name" class="hidden">
             <p style="color:var(--primary); font-weight:600;">¡Es tu primera vez aquí!</p>
             <label class="form-label" style="text-align:left">¿Cómo te llamas?</label>
@@ -225,10 +227,8 @@
             </div>
             <button onclick="logout()" style="margin-left:auto; border:none; background:none; color:var(--offer); cursor:pointer;"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
-
         <h4 style="margin-bottom:15px;">Historial de Pedidos</h4>
-        <div id="history-container">
-            </div>
+        <div id="history-container"></div>
     </div>
 </div>
 
@@ -238,8 +238,6 @@
 
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script src="script.js"></script>
-
 </body>
 </html>
