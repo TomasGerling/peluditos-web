@@ -1,22 +1,35 @@
 :root {
-    --primary: #FF8C42; --primary-dark: #e67e3b;
-    --secondary: #4CA1A3; --accent: #FFD93D;
-    --text: #2c2c2c; --text-light: #595959;
-    --bg: #f4f6f8; --white: #ffffff;
-    --input-bg: #fafafa; --border: #e0e0e0;
-    --whatsapp: #25D366; --offer: #D32F2F;
-    --btn-bg: #f0f0f0; --card-radius: 16px;
+    /* Color ajustado para mejor contraste (WCAG AA) */
+    --primary: #E67E22; 
+    --primary-dark: #D35400;
+    --secondary: #4CA1A3; 
+    --accent: #FFD93D;
+    --text: #2c2c2c; 
+    --text-light: #595959;
+    --bg: #f4f6f8; 
+    --white: #ffffff;
+    --input-bg: #fafafa; 
+    --border: #e0e0e0;
+    --whatsapp: #25D366; 
+    --offer: #C0392B;
+    --btn-bg: #f0f0f0; 
+    --card-radius: 16px;
     --shadow: 0 4px 12px rgba(0,0,0,0.04);
     --shadow-header: 0 2px 15px rgba(0,0,0,0.05);
 }
 
 [data-theme="dark"] {
-    --primary: #FF8C42; --primary-dark: #ff9e5e;
+    --primary: #E67E22; 
+    --primary-dark: #D35400;
     --secondary: #4CA1A3;
-    --text: #e0e0e0; --text-light: #aaaaaa;
-    --bg: #121212; --white: #1e1e1e;
-    --input-bg: #2d2d2d; --border: #333333;
-    --btn-bg: #2d2d2d; --offer: #ff5252;
+    --text: #e0e0e0; 
+    --text-light: #aaaaaa;
+    --bg: #121212; 
+    --white: #1e1e1e;
+    --input-bg: #2d2d2d; 
+    --border: #333333;
+    --btn-bg: #2d2d2d; 
+    --offer: #ff5252;
     --shadow: 0 4px 12px rgba(0,0,0,0.3);
     --shadow-header: 0 2px 15px rgba(0,0,0,0.2);
 }
@@ -33,17 +46,17 @@ header { background-color: var(--white); padding: 0.5rem 5%; box-shadow: var(--s
 /* STATUS BADGE */
 .status-badge { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; white-space: nowrap; cursor: default; }
 .status-badge.open { background-color: rgba(37, 211, 102, 0.15); color: #1e9945; border: 1px solid rgba(37, 211, 102, 0.3); }
-.status-badge.closed { background-color: rgba(211, 47, 47, 0.1); color: #D32F2F; border: 1px solid rgba(211, 47, 47, 0.2); }
+.status-badge.closed { background-color: rgba(211, 47, 47, 0.1); color: #C0392B; border: 1px solid rgba(211, 47, 47, 0.2); }
 .status-circle { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .status-badge.open .status-circle { background-color: #25D366; box-shadow: 0 0 5px #25D366; }
-.status-badge.closed .status-circle { background-color: #D32F2F; }
+.status-badge.closed .status-circle { background-color: #C0392B; }
 
-.user-btn { font-size: 0.9rem; color: var(--primary); background: rgba(255, 140, 66, 0.1); padding: 8px; border-radius: 50px; border: 1px solid transparent; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; transition: all 0.2s; }
+.user-btn { font-size: 0.9rem; color: var(--primary); background: rgba(230, 126, 34, 0.1); padding: 8px; border-radius: 50px; border: 1px solid transparent; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; transition: all 0.2s; }
 .user-btn span { display: none; } 
 .user-btn:hover { background: var(--primary); color: #fff; }
 .theme-toggle { background: var(--btn-bg); border: none; color: var(--text); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; }
 
-/* HERO (Mejora Performance: content-visibility) */
+/* HERO */
 .hero { background: linear-gradient(135deg, var(--secondary), #2c7a7b); color: #ffffff; text-align: center; padding: 2.5rem 1rem 3.5rem 1rem; border-radius: 0 0 30px 30px; margin-bottom: -30px; content-visibility: auto; }
 .hero h1 { font-family: 'Fredoka', sans-serif; margin: 0 0 8px 0; font-size: 2.2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 .promo-pill { background: rgba(0,0,0,0.25); display: inline-block; padding: 6px 16px; border-radius: 20px; margin-top: 15px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; backdrop-filter: blur(5px); }
@@ -59,13 +72,13 @@ header { background-color: var(--white); padding: 0.5rem 5%; box-shadow: var(--s
 .filter-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
 .filter-scroll::-webkit-scrollbar { display: none; }
 .filter-btn { background: var(--white); border: 1px solid var(--border); color: var(--text-light); padding: 8px 18px; border-radius: 50px; font-family: 'Fredoka', sans-serif; font-weight: 600; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 6px; flex-shrink: 0; font-size: 0.95rem; }
-.filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 3px 10px rgba(255, 140, 66, 0.25); }
+.filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 3px 10px rgba(230, 126, 34, 0.25); }
 
-/* PRODUCT GRID (Optimizado) */
-.grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; padding: 0 20px; content-visibility: auto; contain-intrinsic-size: 300px; }
+/* PRODUCT GRID */
+.grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; padding: 0 20px; content-visibility: auto; contain-intrinsic-size: 350px; }
 .card { background: var(--white); border-radius: var(--card-radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; will-change: transform; contain: content; }
 .card-img-container { width: 100%; height: 180px; background: var(--white); display: flex; align-items: center; justify-content: center; position: relative; padding: 15px; border-bottom: 1px solid var(--border); }
-.product-img { width: auto; height: 100%; max-width: 75%; max-height: 160px; object-fit: contain; aspect-ratio: 1/1; } /* Aspect Ratio para evitar saltos */
+.product-img { width: auto; height: 100%; max-width: 75%; max-height: 160px; object-fit: contain; aspect-ratio: 1/1; }
 .category-label { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; color: var(--text-light); writing-mode: vertical-rl; pointer-events: none; }
 .offer-badge { position: absolute; top: 10px; left: 10px; background: var(--offer); color: white; font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; }
 
@@ -109,13 +122,13 @@ header { background-color: var(--white); padding: 0.5rem 5%; box-shadow: var(--s
 .radio-card { flex: 1; position: relative; }
 .radio-card input { position: absolute; opacity: 0; cursor: pointer; }
 .radio-card-content { border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; background: var(--input-bg); height: 100%; }
-.radio-card input:checked + .radio-card-content { border-color: var(--primary); background: rgba(255, 140, 66, 0.1); }
+.radio-card input:checked + .radio-card-content { border-color: var(--primary); background: rgba(230, 126, 34, 0.1); }
 .radio-circle { width: 18px; height: 18px; border: 2px solid var(--text-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .radio-card input:checked + .radio-card-content .radio-circle { border-color: var(--primary); background: var(--primary); box-shadow: inset 0 0 0 3px var(--white); }
 .hidden { display: none; }
 
 .login-content { text-align: center; padding: 30px 20px; }
-.login-btn-primary { background: #e65100; color: white; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 15px; }
+.login-btn-primary { background: #D35400; color: white; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 15px; }
 .phone-input-group { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 10px; }
 .prefix-box { background: var(--input-bg); padding: 12px; border-right: 1px solid var(--border); color: var(--text-light); font-weight: 600; display:flex; align-items:center; }
 .phone-field { border: none; padding: 12px; width: 100%; outline: none; background: var(--white); color: var(--text); font-size: 1rem; }

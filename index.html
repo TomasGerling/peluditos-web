@@ -21,7 +21,6 @@
     </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"></noscript>
     
@@ -30,7 +29,7 @@
 <body>
 
 <header>
-    <a href="#" class="logo" onclick="location.reload()" aria-label="Recargar">
+    <a href="#" class="logo" onclick="location.reload()" aria-label="Recargar Peluditos">
         <i class="fa-solid fa-paw"></i> Peluditos
     </a>
     
@@ -39,11 +38,11 @@
             <span class="status-circle"></span> <span id="status-text">Cerrado</span>
         </div>
 
-        <button id="user-btn-display" class="user-btn" onclick="openLoginOrProfile()" aria-label="Ingresar">
+        <button id="user-btn-display" class="user-btn" onclick="openLoginOrProfile()" aria-label="Ingresar o Ver Perfil">
             <i class="fa-regular fa-user"></i> <span>Ingresar</span>
         </button>
 
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" aria-label="Modo Oscuro">
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" aria-label="Cambiar modo oscuro/claro">
             <i class="fa-solid fa-moon"></i>
         </button>
     </div>
@@ -63,19 +62,19 @@
             <div class="search-row">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="searchInput" placeholder="Buscar marca, piedras..." onkeyup="applyFilters()" aria-label="Buscar producto">
+                    <input type="text" id="searchInput" placeholder="Buscar marca, piedras..." onkeyup="applyFilters()" aria-label="Buscar producto por nombre o marca">
                 </div>
-                <select id="priceSort" class="sort-select" onchange="applyFilters()" aria-label="Ordenar por">
+                <select id="priceSort" class="sort-select" onchange="applyFilters()" aria-label="Ordenar productos por precio">
                     <option value="default">Relevancia</option>
                     <option value="asc">Menor Precio</option>
                     <option value="desc">Mayor Precio</option>
                 </select>
             </div>
             <nav class="filter-scroll">
-                <button class="filter-btn active" onclick="setCategory('all', this)">Todos</button>
-                <button class="filter-btn" onclick="setCategory('perro', this)"><i class="fa-solid fa-dog"></i> Perros</button>
-                <button class="filter-btn" onclick="setCategory('gato', this)"><i class="fa-solid fa-cat"></i> Gatos</button>
-                <button class="filter-btn" onclick="setCategory('otros', this)">Otros</button>
+                <button class="filter-btn active" onclick="setCategory('all', this)" aria-label="Ver todos los productos">Todos</button>
+                <button class="filter-btn" onclick="setCategory('perro', this)" aria-label="Filtrar por perros"><i class="fa-solid fa-dog"></i> Perros</button>
+                <button class="filter-btn" onclick="setCategory('gato', this)" aria-label="Filtrar por gatos"><i class="fa-solid fa-cat"></i> Gatos</button>
+                <button class="filter-btn" onclick="setCategory('otros', this)" aria-label="Filtrar otros productos">Otros</button>
             </nav>
         </div>
     </div>
@@ -87,8 +86,8 @@
     <div class="grid-container" id="product-grid" style="display:none;"></div>
 </main>
 
-<a href="#" id="supportBtn" class="support-float" aria-label="Whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
-<button class="cart-float" onclick="toggleCart()" aria-label="Carrito">
+<a href="#" id="supportBtn" class="support-float" aria-label="Contactar por WhatsApp" rel="noopener noreferrer" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+<button class="cart-float" onclick="toggleCart()" aria-label="Ver Carrito de compras">
     <i class="fa-solid fa-basket-shopping"></i>
     <div class="cart-badge" id="cart-count">0</div>
 </button>
@@ -98,28 +97,28 @@
 <div class="cart-modal" id="cart-modal">
     <div class="cart-header">
         <h3 id="cart-title" style="margin:0">Mi Pedido</h3>
-        <button onclick="closeAllModals()" class="close-btn" aria-label="Cerrar">×</button>
+        <button onclick="closeAllModals()" class="close-btn" aria-label="Cerrar carrito">×</button>
     </div>
     <div class="cart-items" id="cart-items"></div>
     <div class="cart-footer">
         <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-weight:800; font-size:1.1rem;">
             <span>Total:</span><span id="cart-total">$0</span>
         </div>
-        <button class="btn-whatsapp" onclick="checkout()">Iniciar Pedido</button>
+        <button class="btn-whatsapp" onclick="checkout()" aria-label="Iniciar proceso de pedido">Iniciar Pedido</button>
     </div>
 </div>
 
 <div class="cart-modal" id="checkout-modal" style="z-index: 1002;">
     <div class="cart-header">
         <h3 style="margin:0"><i class="fa-solid fa-clipboard-check"></i> Finalizar Pedido</h3>
-        <button onclick="closeCheckout()" class="close-btn">×</button>
+        <button onclick="closeCheckout()" class="close-btn" aria-label="Cerrar checkout">×</button>
     </div>
     <div class="cart-items" style="padding: 20px;">
         <div class="form-group">
-            <label class="form-label"><i class="fa-regular fa-user"></i> Información del Cliente</label>
+            <label class="form-label" for="cx-name"><i class="fa-regular fa-user"></i> Información del Cliente</label>
             <div class="row">
-                <input type="text" id="cx-name" class="form-input" placeholder="Tu Nombre *" required>
-                <input type="tel" id="cx-phone" class="form-input" placeholder="Teléfono *" required>
+                <input type="text" id="cx-name" class="form-input" placeholder="Tu Nombre *" required aria-label="Tu Nombre">
+                <input type="tel" id="cx-phone" class="form-input" placeholder="Teléfono *" required aria-label="Tu Teléfono">
             </div>
         </div>
         <div class="form-group">
@@ -143,11 +142,11 @@
         </div>
         <div id="address-section" class="hidden">
             <div class="form-group">
-                <label class="form-label">Dirección de Entrega</label>
-                <input type="text" id="cx-calle" class="form-input" placeholder="Calle y Altura *" style="margin-bottom:10px">
+                <label class="form-label" for="cx-calle">Dirección de Entrega</label>
+                <input type="text" id="cx-calle" class="form-input" placeholder="Calle y Altura *" style="margin-bottom:10px" aria-label="Calle y altura">
                 <div class="row">
-                    <input type="text" id="cx-piso" class="form-input" placeholder="Piso/Depto">
-                    <input type="text" id="cx-entre" class="form-input" placeholder="Entre calles">
+                    <input type="text" id="cx-piso" class="form-input" placeholder="Piso/Depto" aria-label="Piso o departamento">
+                    <input type="text" id="cx-entre" class="form-input" placeholder="Entre calles" aria-label="Entre calles">
                 </div>
             </div>
         </div>
@@ -171,12 +170,12 @@
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label"><i class="fa-regular fa-comment"></i> Observaciones</label>
-            <textarea id="cx-obs" class="form-input" rows="2" placeholder="Ej: Timbre no funciona..."></textarea>
+            <label class="form-label" for="cx-obs"><i class="fa-regular fa-comment"></i> Observaciones</label>
+            <textarea id="cx-obs" class="form-input" rows="2" placeholder="Ej: Timbre no funciona..." aria-label="Observaciones adicionales"></textarea>
         </div>
     </div>
     <div class="cart-footer">
-        <button class="btn-whatsapp" onclick="sendOrder()">
+        <button class="btn-whatsapp" onclick="sendOrder()" aria-label="Confirmar y enviar pedido por WhatsApp">
             <i class="fa-brands fa-whatsapp"></i> Confirmar y Enviar
         </button>
     </div>
@@ -185,23 +184,23 @@
 <div class="cart-modal" id="login-modal" style="z-index: 1003; height: auto; min-height: 50vh; bottom:0; top:auto; border-radius: 20px 20px 0 0;">
     <div class="cart-header">
         <h3 style="margin:0">Iniciar Sesión</h3>
-        <button onclick="closeAllModals()" class="close-btn">×</button>
+        <button onclick="closeAllModals()" class="close-btn" aria-label="Cerrar login">×</button>
     </div>
     <div class="cart-items login-content">
         <p style="color:var(--text-light); margin-bottom:20px;">Ingresa tu número de teléfono para acceder a tu historial.</p>
         <div id="step-phone">
-            <label class="form-label" style="text-align:left">Número de teléfono</label>
+            <label class="form-label" style="text-align:left" for="login-phone">Número de teléfono</label>
             <div class="phone-input-group">
                 <div class="prefix-box">AR +54</div>
-                <input type="tel" id="login-phone" class="phone-field" placeholder="Ej: 2262123456" onkeyup="checkEnter(event, 'checkPhone')">
+                <input type="tel" id="login-phone" class="phone-field" placeholder="Ej: 2262123456" onkeyup="checkEnter(event, 'checkPhone')" aria-label="Número de teléfono">
             </div>
-            <button class="login-btn-primary" onclick="handleLoginCheck()">Continuar</button>
+            <button class="login-btn-primary" onclick="handleLoginCheck()" aria-label="Continuar">Continuar</button>
         </div>
         <div id="step-name" class="hidden">
             <p style="color:var(--primary); font-weight:600;">¡Es tu primera vez aquí!</p>
-            <label class="form-label" style="text-align:left">¿Cómo te llamas?</label>
-            <input type="text" id="login-name" class="form-input" placeholder="Tu Nombre" style="margin-top:5px;" onkeyup="checkEnter(event, 'register')">
-            <button class="login-btn-primary" onclick="handleRegister()">Crear Cuenta</button>
+            <label class="form-label" style="text-align:left" for="login-name">¿Cómo te llamas?</label>
+            <input type="text" id="login-name" class="form-input" placeholder="Tu Nombre" style="margin-top:5px;" onkeyup="checkEnter(event, 'register')" aria-label="Tu nombre">
+            <button class="login-btn-primary" onclick="handleRegister()" aria-label="Crear cuenta">Crear Cuenta</button>
         </div>
     </div>
 </div>
@@ -209,7 +208,7 @@
 <div class="cart-modal" id="profile-modal" style="z-index: 1003;">
     <div class="cart-header">
         <h3 style="margin:0">Mi Perfil</h3>
-        <button onclick="closeAllModals()" class="close-btn">×</button>
+        <button onclick="closeAllModals()" class="close-btn" aria-label="Cerrar perfil">×</button>
     </div>
     <div class="cart-items">
         <div style="background:var(--input-bg); padding:15px; border-radius:12px; display:flex; align-items:center; gap:15px; margin-bottom:20px;">
@@ -218,7 +217,7 @@
                 <h3 id="profile-name" style="margin:0;">Usuario</h3>
                 <span id="profile-phone" style="color:var(--text-light); font-size:0.9rem;">...</span>
             </div>
-            <button onclick="logout()" style="margin-left:auto; border:none; background:none; color:var(--offer); cursor:pointer;"><i class="fa-solid fa-right-from-bracket"></i></button>
+            <button onclick="logout()" style="margin-left:auto; border:none; background:none; color:var(--offer); cursor:pointer;" aria-label="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
         <h4 style="margin-bottom:15px;">Historial de Pedidos</h4>
         <div id="history-container"></div>
@@ -231,7 +230,6 @@
 
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
-
 <script src="script.js" defer></script>
 
 </body>

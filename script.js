@@ -101,7 +101,6 @@ const brandImages = {
 
 document.getElementById('supportBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hola Peluditos! Tengo una consulta...")}`;
 
-// CAMBIO A DOMContentLoaded PARA INICIO MÁS RÁPIDO
 document.addEventListener('DOMContentLoaded', function() {
     initTheme();
     updateShopStatus(); 
@@ -110,7 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchData(); 
 });
 
-// --- FUNCIÓN NUEVA: HORARIOS ---
 function updateShopStatus() {
     const now = new Date();
     const day = now.getDay(); 
@@ -151,7 +149,6 @@ function updateShopStatus() {
     }
 }
 
-// --- SISTEMA DE USUARIOS ---
 function loadUserSession() {
     const storedUser = localStorage.getItem('peluditos_user');
     if (storedUser) {
@@ -265,7 +262,7 @@ function renderHistory() {
             <div class="history-items">${itemsSummary}</div>
             <div class="history-footer">
                 <span class="history-price">$${order.total.toLocaleString('es-AR')}</span>
-                <button class="btn-repeat" onclick="repeatOrder(${realIdx})"><i class="fa-solid fa-rotate-right"></i> Repetir</button>
+                <button class="btn-repeat" onclick="repeatOrder(${realIdx})" aria-label="Repetir pedido"><i class="fa-solid fa-rotate-right"></i> Repetir</button>
             </div>
         </div>`;
     });
@@ -435,6 +432,7 @@ function applyFilters() {
         let defaultIcon = 'fa-bag-shopping';
         if (p.category === 'perro') defaultIcon = 'fa-dog';
         if (p.category === 'gato') defaultIcon = 'fa-cat';
+        
         let imgHtml = p.imgUrl ? 
             `<div class="card-img-container">${badgeHtml}<img src="${p.imgUrl}" alt="${p.nombre}" class="product-img" loading="lazy" width="200" height="200" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><i class="fa-solid fa-paw placeholder-icon" style="display:none"></i>${catLabelHtml}</div>` : 
             `<div class="card-img-container">${badgeHtml}<i class="fa-solid ${defaultIcon} placeholder-icon"></i>${catLabelHtml}</div>`;
@@ -444,7 +442,7 @@ function applyFilters() {
         const jsSafeName = p.nombre.replace(/'/g, "\\'");
         
         if (p.precioKg) {
-            pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">x Kg Suelto</span><span class="price-amount">$${fmt(p.precioKg)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', 'Kg', ${p.precioKg})"><i class="fa-solid fa-plus"></i></button></div>`;
+            pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">x Kg Suelto</span><span class="price-amount">$${fmt(p.precioKg)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', 'Kg', ${p.precioKg})" aria-label="Agregar ${p.nombre} suelto al carrito"><i class="fa-solid fa-plus"></i></button></div>`;
         }
         if (p.precioBolsa) {
             let labelBolsa = 'Unidad';
@@ -453,7 +451,7 @@ function applyFilters() {
                 if (!isNumber || p.category === 'otros') { labelBolsa = p.weight; } 
                 else { labelBolsa = `Bolsa ${p.weight} Kg`; }
             }
-            pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">${labelBolsa}</span><span class="price-amount">$${fmt(p.precioBolsa)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', '${labelBolsa}', ${p.precioBolsa})"><i class="fa-solid fa-plus"></i></button></div>`;
+            pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">${labelBolsa}</span><span class="price-amount">$${fmt(p.precioBolsa)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', '${labelBolsa}', ${p.precioBolsa})" aria-label="Agregar ${p.nombre} ${labelBolsa} al carrito"><i class="fa-solid fa-plus"></i></button></div>`;
         }
         card.innerHTML = `${imgHtml}<div style="flex:1; display:flex; flex-direction:column;"><div class="card-header"><h2 class="card-title">${p.nombre}</h2></div><div class="card-body">${pricesHtml}</div></div>`;
         fragment.appendChild(card);
@@ -477,7 +475,7 @@ function updateCartUI() {
     if(cart.length === 0) container.innerHTML = '<p style="text-align:center; color:var(--text-light); margin-top:50px;">Tu carrito está vacío 🦴</p>';
     cart.forEach((item, index) => {
         total += item.price * item.qty; count += item.qty;
-        container.innerHTML += `<div class="cart-item"><div style="flex-grow:1"><div style="font-weight:600; font-size:0.9rem; text-transform:capitalize;">${item.name.toLowerCase()}</div><div style="font-size:0.8rem; color:var(--text-light);">${item.type} x $${item.price.toLocaleString('es-AR')}</div></div><div class="qty-control"><button class="qty-btn" onclick="changeQty(${index}, -1)">-</button><span>${item.qty}</span><button class="qty-btn" onclick="changeQty(${index}, 1)">+</button></div></div>`;
+        container.innerHTML += `<div class="cart-item"><div style="flex-grow:1"><div style="font-weight:600; font-size:0.9rem; text-transform:capitalize;">${item.name.toLowerCase()}</div><div style="font-size:0.8rem; color:var(--text-light);">${item.type} x $${item.price.toLocaleString('es-AR')}</div></div><div class="qty-control"><button class="qty-btn" onclick="changeQty(${index}, -1)" aria-label="Disminuir">-</button><span>${item.qty}</span><button class="qty-btn" onclick="changeQty(${index}, 1)" aria-label="Aumentar">+</button></div></div>`;
     });
     totalEl.innerText = `$${total.toLocaleString('es-AR')}`; countEl.innerText = count; countEl.style.display = count > 0 ? 'flex' : 'none';
 }
