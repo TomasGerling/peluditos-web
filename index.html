@@ -700,7 +700,7 @@
 
     function processData(rows) {
         allProducts = [];
-        // DEFINICIÓN DE CLEANPRICE DENTRO DE LA FUNCIÓN PARA EVITAR ERRORES DE SCOPE
+        // Función auxiliar definida dentro para evitar errores de referencia
         const cleanPrice = (val) => {
             if (!val) return 0;
             let cleaned = val.toString().replace(/[$.]/g, '').replace(',', '.').replace(/[^\d.]/g, '');
@@ -715,13 +715,13 @@
             const weightRaw = row[3];
             const weight = (weightRaw && weightRaw.toString().trim() !== '') ? weightRaw : null;
             
-            // --- CORRECCIÓN DE COLUMNAS AQUI ---
-            const precioKg = cleanPrice(row[7]);   // Columna H (Suelto)
-            const precioBolsa = cleanPrice(row[8]); // Columna I (Bolsa/Unidad)
+            // --- LOGICA INTELIGENTE DE PRECIOS ---
+            // 1. Obtenemos valores crudos de las columnas H (7) e I (8)
+            let valColH = cleanPrice(row[7]);
+            let valColI = cleanPrice(row[8]);
             
-            let imgUrl = row[10] && row[10].startsWith('http') ? row[10] : getImageForProduct(nombreRaw);
-
-            if (precioKg <= 0 && precioBolsa <= 0) continue;
+            let precioKg = 0;
+            let precioBolsa = 0;
 
             const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
             const lowerName = normalize(nombreRaw);
@@ -729,12 +729,36 @@
             let category = 'otros';
             let catLabel = ''; 
             
+            // Detección de Categoría
             if (lowerName.match(/gato|cat|kitten|gati|whiskas|felino|7 vidas|fit 32|urinary/)) { category = 'gato'; catLabel = 'Gato'; }
             else if (lowerName.match(/perro|dog|cachorro|adulto|raza|pedigree|dogui|canino|advance|nutricare|old prince|sieger|pipon|gooster|junior|mini|medium|maxi|mordida|sileoni/)) { category = 'perro'; catLabel = 'Perro'; }
             
-            // Excepción para piedras y sobres: forzar categoría 'otros' o simplemente no mostrar como suelto
-            // Al categorizar como 'otros', evitamos iconos de perro/gato si no aplica
-            if (lowerName.match(/piedra|arena|sanitaria|sobre|pouch|lata|humedo/)) { category = 'otros'; catLabel = ''; }
+            // Detectamos si es un producto especial (Piedras, Sobres, etc)
+            const isSpecial = lowerName.match(/piedra|arena|sanitaria|sobre|pouch|lata|humedo|golosina/);
+
+            if (category === 'otros') {
+                if (isSpecial) {
+                    // CASO PIEDRAS/SOBRES: Forzamos que sea precio unitario (Bolsa) y anulamos el Kg
+                    // Tomamos el valor mayor de cualquiera de las dos columnas
+                    category = 'otros'; catLabel = ''; 
+                    precioBolsa = Math.max(valColH, valColI);
+                    precioKg = 0;
+                } else {
+                    // CASO ARROZ/CONEJIN (Granel en Otros): INVERTIMOS COLUMNAS
+                    // El usuario tiene Bolsa en H y Kilo en I para estos productos
+                    precioBolsa = valColH; // H es Bolsa
+                    precioKg = valColI;    // I es Kg
+                }
+            } else {
+                // CASO PERROS/GATOS (Estándar): Mantenemos orden normal
+                // H es Kg, I es Bolsa
+                precioKg = valColH;
+                precioBolsa = valColI;
+            }
+
+            let imgUrl = row[10] && row[10].startsWith('http') ? row[10] : getImageForProduct(nombreRaw);
+
+            if (precioKg <= 0 && precioBolsa <= 0) continue;
 
             allProducts.push({
                 nombre: cleanProductName(nombreRaw), 
@@ -814,7 +838,7 @@
                 let labelBolsa = 'Unidad';
                 if (p.weight) {
                     const isNumber = !isNaN(parseFloat(p.weight)) && isFinite(p.weight);
-                    // Si es categoría 'otros' (piedras/sobres) o texto (ej: Pack), usar texto directo
+                    // Si es categoría 'otros' o texto (ej: Pack), usar texto directo
                     if (!isNumber || p.category === 'otros') {
                         labelBolsa = p.weight; 
                     } else {
