@@ -101,43 +101,40 @@ const brandImages = {
 
 document.getElementById('supportBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hola Peluditos! Tengo una consulta...")}`;
 
-// INICIALIZACION
-window.onload = function() { 
+// CAMBIO A DOMContentLoaded PARA INICIO MÁS RÁPIDO
+document.addEventListener('DOMContentLoaded', function() {
     initTheme();
-    updateShopStatus(); // Chequea horario
+    updateShopStatus(); 
     loadUserSession(); 
     loadCart(); 
     fetchData(); 
-};
+});
 
 // --- FUNCIÓN NUEVA: HORARIOS ---
 function updateShopStatus() {
     const now = new Date();
-    const day = now.getDay(); // 0 Domingo, 1 Lunes...
+    const day = now.getDay(); 
     const minutes = now.getHours() * 60 + now.getMinutes();
 
-    const morningStart = 9 * 60;        // 09:00 -> 540
-    const morningEnd = 13 * 60;         // 13:00 -> 780
-    const afternoonStart = 16 * 60 + 30; // 16:30 -> 990
-    const afternoonEnd = 20 * 60 + 30;   // 20:30 -> 1230
+    const morningStart = 9 * 60;        
+    const morningEnd = 13 * 60;         
+    const afternoonStart = 16 * 60 + 30; 
+    const afternoonEnd = 20 * 60 + 30;   
 
     let isOpen = false;
     let text = "Cerrado";
 
-    // Si es Lunes a Sábado
     if (day >= 1 && day <= 6) {
         if ((minutes >= morningStart && minutes < morningEnd) ||
             (minutes >= afternoonStart && minutes < afternoonEnd)) {
             isOpen = true;
             text = "Abierto Ahora";
         } else {
-            // Lógica inteligente de "Abre a las..."
             if (minutes < morningStart) text = "Abre 09:00hs";
             else if (minutes >= morningEnd && minutes < afternoonStart) text = "Abre 16:30hs";
             else text = "Cerrado";
         }
     } else {
-        // Domingo
         text = "Cerrado (Domingo)";
     }
 

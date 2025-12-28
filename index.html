@@ -3,29 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="description" content="Peluditos Petshop en Necochea. Catálogo actualizado.">
+    <meta name="description" content="Peluditos Petshop en Necochea. Catálogo actualizado con los mejores precios.">
     <meta name="theme-color" content="#FF8C42">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
     <title>Peluditos Petshop - Catálogo Online</title>
     
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-R43T32J1Z1"></script>
     <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-R43T32J1Z1');
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-R43T32J1Z1');
     </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"></noscript>
     
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <header>
-    <a href="#" class="logo" onclick="location.reload()">
+    <a href="#" class="logo" onclick="location.reload()" aria-label="Recargar">
         <i class="fa-solid fa-paw"></i> Peluditos
     </a>
     
@@ -34,11 +39,11 @@
             <span class="status-circle"></span> <span id="status-text">Cerrado</span>
         </div>
 
-        <button id="user-btn-display" class="user-btn" onclick="openLoginOrProfile()">
+        <button id="user-btn-display" class="user-btn" onclick="openLoginOrProfile()" aria-label="Ingresar">
             <i class="fa-regular fa-user"></i> <span>Ingresar</span>
         </button>
 
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" aria-label="Modo Oscuro">
             <i class="fa-solid fa-moon"></i>
         </button>
     </div>
@@ -58,9 +63,9 @@
             <div class="search-row">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="searchInput" placeholder="Buscar marca, piedras..." onkeyup="applyFilters()">
+                    <input type="text" id="searchInput" placeholder="Buscar marca, piedras..." onkeyup="applyFilters()" aria-label="Buscar producto">
                 </div>
-                <select id="priceSort" class="sort-select" onchange="applyFilters()">
+                <select id="priceSort" class="sort-select" onchange="applyFilters()" aria-label="Ordenar por">
                     <option value="default">Relevancia</option>
                     <option value="asc">Menor Precio</option>
                     <option value="desc">Mayor Precio</option>
@@ -82,8 +87,8 @@
     <div class="grid-container" id="product-grid" style="display:none;"></div>
 </main>
 
-<a href="#" id="supportBtn" class="support-float"><i class="fa-brands fa-whatsapp"></i></a>
-<button class="cart-float" onclick="toggleCart()">
+<a href="#" id="supportBtn" class="support-float" aria-label="Whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
+<button class="cart-float" onclick="toggleCart()" aria-label="Carrito">
     <i class="fa-solid fa-basket-shopping"></i>
     <div class="cart-badge" id="cart-count">0</div>
 </button>
@@ -93,7 +98,7 @@
 <div class="cart-modal" id="cart-modal">
     <div class="cart-header">
         <h3 id="cart-title" style="margin:0">Mi Pedido</h3>
-        <button onclick="closeAllModals()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+        <button onclick="closeAllModals()" class="close-btn" aria-label="Cerrar">×</button>
     </div>
     <div class="cart-items" id="cart-items"></div>
     <div class="cart-footer">
@@ -107,7 +112,7 @@
 <div class="cart-modal" id="checkout-modal" style="z-index: 1002;">
     <div class="cart-header">
         <h3 style="margin:0"><i class="fa-solid fa-clipboard-check"></i> Finalizar Pedido</h3>
-        <button onclick="closeCheckout()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+        <button onclick="closeCheckout()" class="close-btn">×</button>
     </div>
     <div class="cart-items" style="padding: 20px;">
         <div class="form-group">
@@ -124,20 +129,14 @@
                     <input type="radio" name="deliveryType" value="retiro" checked onchange="toggleAddress(false)">
                     <div class="radio-card-content">
                         <div class="radio-circle"></div>
-                        <div>
-                            <div style="font-weight:700">Retiro en Local</div>
-                            <div style="font-size:0.8rem; color:var(--text-light)">Sin costo</div>
-                        </div>
+                        <div><div style="font-weight:700">Retiro en Local</div><div style="font-size:0.8rem; color:var(--text-light)">Sin costo</div></div>
                     </div>
                 </label>
                 <label class="radio-card">
                     <input type="radio" name="deliveryType" id="opt-delivery" value="delivery" onchange="toggleAddress(true)">
                     <div class="radio-card-content">
                         <div class="radio-circle"></div>
-                        <div>
-                            <div style="font-weight:700">Delivery</div>
-                            <div style="font-size:0.8rem; color:var(--text-light)" id="delivery-text">Envío a domicilio</div>
-                        </div>
+                        <div><div style="font-weight:700">Delivery</div><div style="font-size:0.8rem; color:var(--text-light)" id="delivery-text">Envío a domicilio</div></div>
                     </div>
                 </label>
             </div>
@@ -159,20 +158,14 @@
                     <input type="radio" name="paymentType" value="efectivo" checked>
                     <div class="radio-card-content">
                         <div class="radio-circle"></div>
-                        <div>
-                            <div style="font-weight:700">Efectivo</div>
-                            <div style="font-size:0.8rem; color:var(--text-light)">Al recibir</div>
-                        </div>
+                        <div><div style="font-weight:700">Efectivo</div><div style="font-size:0.8rem; color:var(--text-light)">Al recibir</div></div>
                     </div>
                 </label>
                 <label class="radio-card">
                     <input type="radio" name="paymentType" value="transferencia">
                     <div class="radio-card-content">
                         <div class="radio-circle"></div>
-                        <div>
-                            <div style="font-weight:700">Transf.</div>
-                            <div style="font-size:0.8rem; color:var(--text-light)">Anticipado</div>
-                        </div>
+                        <div><div style="font-weight:700">Transf.</div><div style="font-size:0.8rem; color:var(--text-light)">Anticipado</div></div>
                     </div>
                 </label>
             </div>
@@ -192,10 +185,10 @@
 <div class="cart-modal" id="login-modal" style="z-index: 1003; height: auto; min-height: 50vh; bottom:0; top:auto; border-radius: 20px 20px 0 0;">
     <div class="cart-header">
         <h3 style="margin:0">Iniciar Sesión</h3>
-        <button onclick="closeAllModals()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+        <button onclick="closeAllModals()" class="close-btn">×</button>
     </div>
     <div class="cart-items login-content">
-        <p style="color:var(--text-light); margin-bottom:20px;">Ingresa tu número de teléfono para acceder a tu historial y repetir pedidos.</p>
+        <p style="color:var(--text-light); margin-bottom:20px;">Ingresa tu número de teléfono para acceder a tu historial.</p>
         <div id="step-phone">
             <label class="form-label" style="text-align:left">Número de teléfono</label>
             <div class="phone-input-group">
@@ -216,7 +209,7 @@
 <div class="cart-modal" id="profile-modal" style="z-index: 1003;">
     <div class="cart-header">
         <h3 style="margin:0">Mi Perfil</h3>
-        <button onclick="closeAllModals()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+        <button onclick="closeAllModals()" class="close-btn">×</button>
     </div>
     <div class="cart-items">
         <div style="background:var(--input-bg); padding:15px; border-radius:12px; display:flex; align-items:center; gap:15px; margin-bottom:20px;">
@@ -236,8 +229,10 @@
     <p><strong>Peluditos Petshop</strong><br>Necochea, Buenos Aires</p>
 </footer>
 
-<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="script.js"></script>
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+
+<script src="script.js" defer></script>
+
 </body>
 </html>
