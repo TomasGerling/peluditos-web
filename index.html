@@ -722,7 +722,7 @@
         return clean;
     }
 
-    function processData(rows) {
+function processData(rows) {
         allProducts = [];
         for (let i = 5; i < rows.length; i++) {
             const row = rows[i];
@@ -731,17 +731,16 @@
 
             const weightRaw = row[3];
             const weight = (weightRaw && weightRaw.toString().trim() !== '') ? weightRaw : null;
+            
+            // --- CORRECCIÓN DE COLUMNAS AQUI ---
+            // Antes row[8] y row[9]. Ahora row[7] (Col H) y row[8] (Col I)
+            const precioKg = cleanPrice(row[7]);   // Columna H (Suelto)
+            const precioBolsa = cleanPrice(row[8]); // Columna I (Bolsa/Unidad)
+            
+            // Mantenemos la imagen en Columna K (row[10]) o buscamos automática
             let imgUrl = row[10] && row[10].startsWith('http') ? row[10] : getImageForProduct(nombreRaw);
 
-            const cleanPrice = (val) => {
-                if (!val) return 0;
-                let cleaned = val.toString().replace(/[$.]/g, '').replace(',', '.').replace(/[^\d.]/g, '');
-                return roundToCustomRule(parseFloat(cleaned) || 0);
-            };
-
-            const precioKg = cleanPrice(row[8]);
-            const precioBolsa = cleanPrice(row[9]);
-
+            // Si no hay precios, saltamos
             if (precioKg <= 0 && precioBolsa <= 0) continue;
 
             const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -749,18 +748,28 @@
             
             let category = 'otros';
             let catLabel = ''; 
+            
+            // Categorización automática
             if (lowerName.match(/gato|cat|kitten|gati|whiskas|felino|7 vidas|fit 32|urinary/)) { category = 'gato'; catLabel = 'Gato'; }
             else if (lowerName.match(/perro|dog|cachorro|adulto|raza|pedigree|dogui|canino|advance|nutricare|old prince|sieger|pipon|gooster|junior|mini|medium|maxi|mordida|sileoni/)) { category = 'perro'; catLabel = 'Perro'; }
+            
+            // Excepciones para que Piedras/Sobres no se confundan de categoría
+            if (lowerName.match(/piedra|arena|sanitaria|sobre|pouch|lata|humedo/)) { category = 'otros'; catLabel = ''; }
 
             allProducts.push({
-                nombre: cleanProductName(nombreRaw), originalName: nombreRaw, weight: weight, imgUrl: imgUrl, 
-                precioKg: precioKg > 0 ? precioKg : null, precioBolsa: precioBolsa > 0 ? precioBolsa : null,
-                category: category, catLabel: catLabel, isOffer: lowerName.includes('oferta') || lowerName.includes('promo')
+                nombre: cleanProductName(nombreRaw), 
+                originalName: nombreRaw, 
+                weight: weight, 
+                imgUrl: imgUrl, 
+                precioKg: precioKg > 0 ? precioKg : null, 
+                precioBolsa: precioBolsa > 0 ? precioBolsa : null,
+                category: category, 
+                catLabel: catLabel, 
+                isOffer: lowerName.includes('oferta') || lowerName.includes('promo')
             });
         }
         applyFilters();
     }
-
     function setCategory(cat, btn) {
         currentCategory = cat;
         document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
