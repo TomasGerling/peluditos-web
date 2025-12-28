@@ -13,8 +13,7 @@
 
     <title>Peluditos Petshop - Catálogo Online</title>
     
-<!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R43T32J1Z1"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-R43T32J1Z1"></script>
     <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
@@ -74,7 +73,6 @@
         .controls-wrapper { max-width: 1200px; margin: 0 auto 25px auto; padding: 0 20px; position: relative; z-index: 10; }
         .search-container { background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 15px; transition: background-color 0.3s; }
         
-        /* Contenedor flexible para el buscador y el filtro de precio */
         .search-row { display: flex; gap: 10px; width: 100%; }
         
         .search-box { position: relative; flex-grow: 1; }
@@ -82,7 +80,6 @@
         .search-box input:focus { border-color: var(--primary); background: var(--white); }
         .search-box i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 1.1rem; }
         
-        /* Estilo para el selector de orden */
         .sort-select { padding: 0 15px; border-radius: 12px; border: 2px solid var(--border); background: var(--input-bg); color: var(--text); font-family: 'Open Sans', sans-serif; cursor: pointer; outline: none; transition: all 0.2s; min-width: 130px; font-weight: 600; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FF8C42%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 12px top 50%; background-size: 10px auto; }
         .sort-select:focus { border-color: var(--primary); }
 
@@ -136,6 +133,23 @@
         .qty-control { display: flex; align-items: center; gap: 12px; background: var(--input-bg); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); }
         .qty-btn { border: none; background: none; font-weight: bold; cursor: pointer; color: var(--primary); font-size: 1.2rem; padding: 0; display: flex; align-items: center; height: 100%; }
 
+        /* Estilos del Modal de Checkout (NUEVO) */
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; color: var(--text); }
+        .form-input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); color: var(--text); font-family: inherit; font-size: 1rem; }
+        .form-input:focus { outline: none; border-color: var(--primary); background: var(--white); }
+        .row { display: flex; gap: 15px; }
+        
+        .radio-group { display: flex; gap: 10px; }
+        .radio-card { flex: 1; position: relative; }
+        .radio-card input { position: absolute; opacity: 0; cursor: pointer; }
+        .radio-card-content { border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; background: var(--input-bg); height: 100%; }
+        .radio-card input:checked + .radio-card-content { border-color: var(--primary); background: rgba(255, 140, 66, 0.1); }
+        .radio-card input:disabled + .radio-card-content { opacity: 0.5; cursor: not-allowed; background: #eee; }
+        .radio-circle { width: 18px; height: 18px; border: 2px solid var(--text-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .radio-card input:checked + .radio-card-content .radio-circle { border-color: var(--primary); background: var(--primary); box-shadow: inset 0 0 0 3px var(--white); }
+        .hidden { display: none; }
+
         footer { text-align: center; padding: 30px 20px; color: var(--text-light); font-size: 0.85rem; }
 
         @media (max-width: 600px) {
@@ -146,6 +160,8 @@
             .category-label { display: none; } 
             .card-header { padding: 15px 10px 5px 10px; }
             .card-body { padding: 5px 10px 15px 10px; width: 100%; }
+            .row { flex-direction: column; gap: 10px; }
+            .radio-group { flex-direction: column; }
         }
     </style>
 </head>
@@ -226,7 +242,92 @@
         <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-weight:800; font-size:1.1rem;">
             <span>Total:</span><span id="cart-total">$0</span>
         </div>
-        <button class="btn-whatsapp" onclick="checkout()">Enviar Pedido</button>
+        <button class="btn-whatsapp" onclick="checkout()">Iniciar Pedido</button>
+    </div>
+</div>
+
+<div class="cart-modal" id="checkout-modal" style="z-index: 1002;">
+    <div class="cart-header">
+        <h3 style="margin:0"><i class="fa-solid fa-clipboard-check"></i> Finalizar Pedido</h3>
+        <button onclick="closeCheckout()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text);">×</button>
+    </div>
+    <div class="cart-items" style="padding: 20px;">
+        <div class="form-group">
+            <label class="form-label"><i class="fa-regular fa-user"></i> Información del Cliente</label>
+            <div class="row">
+                <input type="text" id="cx-name" class="form-input" placeholder="Tu Nombre *" required>
+                <input type="tel" id="cx-phone" class="form-input" placeholder="Teléfono *" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-truck-fast"></i> Tipo de Entrega</label>
+            <div class="radio-group">
+                <label class="radio-card">
+                    <input type="radio" name="deliveryType" value="retiro" checked onchange="toggleAddress(false)">
+                    <div class="radio-card-content">
+                        <div class="radio-circle"></div>
+                        <div>
+                            <div style="font-weight:700">Retiro en Local</div>
+                            <div style="font-size:0.8rem; color:var(--text-light)">Sin costo adicional</div>
+                        </div>
+                    </div>
+                </label>
+                <label class="radio-card">
+                    <input type="radio" name="deliveryType" id="opt-delivery" value="delivery" onchange="toggleAddress(true)">
+                    <div class="radio-card-content">
+                        <div class="radio-circle"></div>
+                        <div>
+                            <div style="font-weight:700">Delivery</div>
+                            <div style="font-size:0.8rem; color:var(--text-light)" id="delivery-text">Envío a domicilio</div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+        <div id="address-section" class="hidden">
+            <div class="form-group">
+                <label class="form-label">Dirección de Entrega</label>
+                <input type="text" id="cx-calle" class="form-input" placeholder="Calle y Altura *" style="margin-bottom:10px">
+                <div class="row">
+                    <input type="text" id="cx-piso" class="form-input" placeholder="Piso/Depto">
+                    <input type="text" id="cx-entre" class="form-input" placeholder="Entre calles">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label"><i class="fa-regular fa-credit-card"></i> Forma de Pago</label>
+            <div class="radio-group">
+                <label class="radio-card">
+                    <input type="radio" name="paymentType" value="efectivo" checked>
+                    <div class="radio-card-content">
+                        <div class="radio-circle"></div>
+                        <div>
+                            <div style="font-weight:700">Efectivo</div>
+                            <div style="font-size:0.8rem; color:var(--text-light)">Al recibir</div>
+                        </div>
+                    </div>
+                </label>
+                <label class="radio-card">
+                    <input type="radio" name="paymentType" value="transferencia">
+                    <div class="radio-card-content">
+                        <div class="radio-circle"></div>
+                        <div>
+                            <div style="font-weight:700">Transferencia</div>
+                            <div style="font-size:0.8rem; color:var(--text-light)">Pago anticipado</div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label"><i class="fa-regular fa-comment"></i> Observaciones</label>
+            <textarea id="cx-obs" class="form-input" rows="2" placeholder="Ej: Timbre no funciona..."></textarea>
+        </div>
+    </div>
+    <div class="cart-footer">
+        <button class="btn-whatsapp" onclick="sendOrder()">
+            <i class="fa-brands fa-whatsapp"></i> Confirmar y Enviar
+        </button>
     </div>
 </div>
 
@@ -238,8 +339,12 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    // --- CONFIGURACIÓN ---
     const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRbHFTGg7yD-wla-WTyuksMKmoPhblVtdrNAEf_BpQStuoAvVQZx2cwgigSYETo_A/pub?gid=1152455124&single=true&output=csv";
     const WHATSAPP_NUMBER = "5492262677026"; 
+    
+    // CAMBIAR A 'true' PARA ACTIVAR DELIVERY
+    const ENABLE_DELIVERY = false; 
 
     // LISTA DE IMAGENES OPTIMIZADAS (LOCALES WEBP)
     const customImages = {
@@ -250,7 +355,7 @@
         "advance bio adulto": "./img/advance-bio-adulto.webp",
         "advance bio cachorro": "./img/advance-bio-cachorro.webp",
         "advance bio cordero": "./img/advance-bio-cordero.webp",
-        "dog chow adultos razas pequenas": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Dog-Chow-Adultos-Minis-y-Peque%C3%B1os.jpg.webp", // Mantenemos URL original
+        "dog chow adultos razas pequenas": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Dog-Chow-Adultos-Minis-y-Peque%C3%B1os.jpg.webp",
         "dog chow adultos razas medianas": "./img/dog-chow-adultos-razas-medianas.webp",
         "dogui cachorros": "./img/dogui-cachorros.webp",
         "dogui carne": "./img/dogui-carne.webp",
@@ -483,33 +588,28 @@
 
     function applyFilters() {
         const term = document.getElementById('searchInput').value.toLowerCase();
-        const sortOrder = document.getElementById('priceSort').value; // 'default', 'asc', 'desc'
+        const sortOrder = document.getElementById('priceSort').value;
         const grid = document.getElementById('product-grid');
         grid.innerHTML = '';
 
         const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         
-        // 1. FILTRADO
         let filtered = allProducts.filter(p => {
             const matchCat = currentCategory === 'all' || p.category === currentCategory;
             const matchSearch = normalize(p.originalName).includes(normalize(term));
             return matchCat && matchSearch;
         });
 
-        // 2. ORDENAMIENTO
         if (sortOrder !== 'default') {
             filtered.sort((a, b) => {
-                // Obtenemos el precio más bajo disponible para comparar
                 const getMinPrice = (prod) => {
                     const prices = [];
                     if (prod.precioKg) prices.push(prod.precioKg);
                     if (prod.precioBolsa) prices.push(prod.precioBolsa);
                     return Math.min(...prices);
                 };
-
                 const priceA = getMinPrice(a);
                 const priceB = getMinPrice(b);
-
                 return sortOrder === 'asc' ? priceA - priceB : priceB - priceA;
             });
         }
@@ -622,11 +722,82 @@
     
     function toggleCart() { document.getElementById('cart-modal').classList.toggle('active'); document.getElementById('cart-overlay').classList.toggle('active'); }
     
+    // --- LÓGICA DE CHECKOUT Y ENVÍO ---
+    
     function checkout() {
-        if (cart.length === 0) return Swal.fire({ title: 'Ups', text: 'El carrito está vacío', icon: 'warning', background: 'var(--white)', color: 'var(--text)' });
-        let msg = "Hola Peluditos! 🐾 Quiero pedir:\n\n"; let total = 0;
-        cart.forEach(i => { let sub = i.price * i.qty; total += sub; msg += `▪️ ${i.qty} x ${i.name} (${i.type}) = $${sub.toLocaleString('es-AR')}\n`; });
-        msg += `\n*TOTAL: $${total.toLocaleString('es-AR')}*\n\n¿Tienen stock? Gracias!`;
+        if (cart.length === 0) {
+            return Swal.fire({ title: 'Ups', text: 'El carrito está vacío', icon: 'warning', background: 'var(--white)', color: 'var(--text)' });
+        }
+        document.getElementById('cart-modal').classList.remove('active');
+        
+        const deliveryOpt = document.getElementById('opt-delivery');
+        const deliveryText = document.getElementById('delivery-text');
+        
+        if (!ENABLE_DELIVERY) {
+            deliveryOpt.disabled = true;
+            deliveryText.innerText = "(No disponible)";
+        } else {
+            deliveryOpt.disabled = false;
+            deliveryText.innerText = "Envío a domicilio";
+        }
+
+        document.getElementById('checkout-modal').classList.add('active');
+    }
+
+    function toggleAddress(show) {
+        const section = document.getElementById('address-section');
+        if (show) section.classList.remove('hidden');
+        else section.classList.add('hidden');
+    }
+
+    function closeCheckout() {
+        document.getElementById('checkout-modal').classList.remove('active');
+        document.getElementById('cart-modal').classList.add('active');
+    }
+
+    function sendOrder() {
+        const name = document.getElementById('cx-name').value;
+        const phone = document.getElementById('cx-phone').value;
+        
+        if (!name || !phone) {
+            return Swal.fire({ title: 'Faltan datos', text: 'Por favor completa nombre y teléfono', icon: 'error' });
+        }
+
+        const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
+        const paymentType = document.querySelector('input[name="paymentType"]:checked').value;
+        const obs = document.getElementById('cx-obs').value;
+
+        let addressText = "";
+        if (deliveryType === 'delivery') {
+            const calle = document.getElementById('cx-calle').value;
+            const extra = document.getElementById('cx-piso').value;
+            const entre = document.getElementById('cx-entre').value;
+            
+            if (!calle) return Swal.fire({ text: 'Por favor indica la dirección de entrega', icon: 'warning' });
+            
+            addressText = `📍 *Envío a:* ${calle} ${extra ? '('+extra+')' : ''}\n`;
+            if(entre) addressText += `   Entre: ${entre}\n`;
+        } else {
+            addressText = `🏪 *Retiro en Local*\n`;
+        }
+
+        let msg = `Hola Peluditos! 👋 Soy *${name}*.\n`;
+        msg += `📞 Tel: ${phone}\n\n`;
+        msg += `📋 *MI PEDIDO:*\n`;
+        
+        let total = 0;
+        cart.forEach(i => { 
+            let sub = i.price * i.qty; 
+            total += sub; 
+            msg += `▪️ ${i.qty} x ${i.name} (${i.type}) = $${sub.toLocaleString('es-AR')}\n`; 
+        });
+        
+        msg += `\n💰 *TOTAL: $${total.toLocaleString('es-AR')}*\n`;
+        msg += `------------------\n`;
+        msg += addressText;
+        msg += `💳 *Pago:* ${paymentType.toUpperCase()}\n`;
+        if(obs) msg += `📝 *Nota:* ${obs}\n`;
+
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 </script>
