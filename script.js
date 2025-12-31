@@ -47,7 +47,7 @@ function processSheetData(rows) {
     let idCounter = 0;
 
     // Empezamos desde la fila 5 (índice 5) para saltar encabezados de tu Excel
-    for (let i = 5; i < rows.length; i++) {
+    for (let i = 4; i < rows.length; i++) {
         const row = rows[i];
         const nombreRaw = row[2]; // Columna C
         if (!nombreRaw || nombreRaw.trim() === "" || nombreRaw.includes("DESCRIPCION")) continue;
