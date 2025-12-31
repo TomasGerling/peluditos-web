@@ -1,6 +1,6 @@
-/* Tailwind maneja el 95% de los estilos. Aquí solo customs específicos */
+/* Tailwind maneja el 95% de los estilos. */
 
-/* SCROLLBAR PERSONALIZADO */
+/* SCROLLBAR */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -23,7 +23,6 @@
     background: #4b5563;
 }
 
-/* Ocultar scrollbar en contenedor de categorías pero permitir scroll */
 .hide-scrollbar::-webkit-scrollbar {
     display: none;
 }
@@ -32,13 +31,13 @@
     scrollbar-width: none;
 }
 
-/* Estilos de Botones de Filtro */
+/* Filtros */
 .filter-btn {
     padding: 0.6rem 1.2rem;
-    border-radius: 9999px; /* full */
+    border-radius: 9999px; 
     background-color: white;
-    color: #4b5563; /* gray-600 */
-    border: 1px solid #e5e7eb; /* gray-200 */
+    color: #4b5563; 
+    border: 1px solid #e5e7eb; 
     font-weight: 500;
     transition: all 0.3s ease;
     white-space: nowrap;
@@ -65,13 +64,20 @@
 }
 
 .filter-btn.active {
-    background-color: #F97316; /* Primary Orange */
+    background-color: #F97316;
     color: white;
     border-color: #F97316;
     box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
 }
 
-/* Animaciones Custom que Tailwind no trae por defecto */
+/* Flying Image Animation Class */
+.flying-img {
+    pointer-events: none; /* Crucial para que no bloquee clics mientras vuela */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    object-fit: contain;
+}
+
+/* Animations */
 @keyframes float {
     0% { transform: translateY(0px); }
     50% { transform: translateY(-15px); }
@@ -95,7 +101,7 @@
 }
 .animate-fade-in-up {
     animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0; /* Init hidden */
+    opacity: 0;
 }
 
 @keyframes bounce-slow {
