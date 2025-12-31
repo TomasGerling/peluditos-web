@@ -348,7 +348,7 @@ function processData(rows) {
         return roundToCustomRule(parseFloat(cleaned) || 0);
     };
 
-    for (let i = 5; i < rows.length; i++) {
+    for (let i = 3; i < rows.length; i++) {
         const row = rows[i];
         let nombreRaw = row[2];
         if (!nombreRaw || nombreRaw.includes("DESCRIPCION")) continue;
