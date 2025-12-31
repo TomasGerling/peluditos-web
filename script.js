@@ -6,6 +6,7 @@ let cart = [];
 let currentCategory = 'all';
 let currentUser = null; 
 
+// Imágenes personalizadas
 const customImages = {
     "agility adulto raza pequena": "./img/agility-adulto-raza-pequena.webp",
     "agility cachorro": "./img/agility-cachorro.webp",
@@ -31,8 +32,9 @@ async function init() {
         const response = await fetch(GOOGLE_SHEET_URL);
         const csvText = await response.text();
         
+        // Usamos PapaParse para leer el CSV correctamente
         Papa.parse(csvText, {
-            header: false,
+            header: false, // Leemos por posición de columna, no por nombre
             skipEmptyLines: true,
             complete: function(results) {
                 processData(results.data);
@@ -50,61 +52,44 @@ function processData(rows) {
     allProducts = [];
     const keywords = Object.keys(customImages).sort((a, b) => b.length - a.length);
 
-    // --- DETECCIÓN AUTOMÁTICA DE COLUMNAS ---
-    let headerIndex = -1;
-    let colName = -1;
-    let colPriceKg = -1;
-    let colPriceBolsa = -1;
-
-    // Buscamos la fila que contiene los encabezados exactos de tu Excel
+    // Iteramos las filas. Según tu Excel, los datos empiezan después de los encabezados.
     for (let i = 0; i < rows.length; i++) {
-        // Convertimos a mayúsculas y quitamos espacios para comparar seguro
-        const row = rows[i].map(cell => cell ? cell.toString().toUpperCase().trim() : "");
-        
-        if (row.includes("DESCRIPCION") && (row.includes("BOLSA") || row.includes("X KG"))) {
-            headerIndex = i;
-            colName = row.indexOf("DESCRIPCION");
-            colPriceKg = row.indexOf("X KG"); // Buscamos columna 'X KG' para precio unitario
-            colPriceBolsa = row.indexOf("BOLSA"); // Buscamos columna 'BOLSA' para precio cerrado
-            break;
-        }
-    }
-
-    // Si no encuentra encabezados, usamos el fallback calculado (Indices desplazados +2)
-    if (headerIndex === -1) {
-        console.warn("No se encontraron encabezados, usando modo manual.");
-        headerIndex = 2; // Asumiendo datos empiezan tras fila 3
-        colName = 3;     // Columna B desplazada
-        colPriceKg = 9;  // Columna H ("X KG") desplazada
-        colPriceBolsa = 10; // Columna I ("BOLSA") desplazada
-    }
-
-    // Procesamos desde la fila siguiente al encabezado
-    for (let i = headerIndex + 1; i < rows.length; i++) {
         const columns = rows[i];
-        if (!columns[colName]) continue;
-
-        const rawName = columns[colName];
-        if (!rawName || rawName.trim() === "" || rawName === "DESCRIPCION") continue;
-
-        const name = rawName.trim();
-
-        // Leemos precios usando los índices detectados
-        let valKg = columns[colPriceKg];
-        let valBolsa = columns[colPriceBolsa];
-
-        // Limpieza de moneda: quitamos '$', puntos de mil, y cambiamos coma decimal si hace falta
-        // Asumimos formato numérico estándar del CSV
-        let priceKg = typeof valKg === 'string' ? parseFloat(valKg.replace(/[$.]/g, '').replace(',', '.')) : parseFloat(valKg);
-        let priceCerrada = typeof valBolsa === 'string' ? parseFloat(valBolsa.replace(/[$.]/g, '').replace(',', '.')) : parseFloat(valBolsa);
         
-        // Si el parseo falló (NaN) intentamos directo (a veces el CSV ya viene limpio)
-        if(isNaN(priceKg) && valKg) priceKg = parseFloat(valKg);
-        if(isNaN(priceCerrada) && valBolsa) priceCerrada = parseFloat(valBolsa);
+        // --- MAPEO DIRECTO SEGÚN TU EXCEL ---
+        // Columna B (Indice 1) -> DESCRIPCIÓN
+        // Columna H (Indice 7) -> PRECIO X KG
+        // Columna I (Indice 8) -> PRECIO BOLSA
 
+        if (!columns[1]) continue; // Si no hay columna 1, saltamos
+
+        const rawName = columns[1].trim(); 
+        
+        // Ignoramos filas vacías o encabezados que digan "DESCRIPCION"
+        if (!rawName || rawName === "DESCRIPCION" || rawName === "") continue;
+
+        // Limpiamos precios (quitamos $ y puntos si existen)
+        const parsePrice = (val) => {
+            if (!val) return 0;
+            // Si es string, limpiamos caracteres raros y parseamos
+            if (typeof val === 'string') {
+                // Reemplaza '$' y puntos de mil, deja la coma decimal si la hay, luego convierte a formato JS
+                const clean = val.replace(/[$.]/g, '').replace(',', '.');
+                return parseFloat(clean);
+            }
+            return parseFloat(val);
+        };
+
+        const priceKg = parsePrice(columns[7]);      // Columna H
+        const priceCerrada = parsePrice(columns[8]); // Columna I
+
+        // Validación: Si NO tiene ningún precio válido, no lo mostramos
         if ((isNaN(priceKg) || priceKg <= 0) && (isNaN(priceCerrada) || priceCerrada <= 0)) continue;
 
+        const name = rawName;
         const lowerName = name.toLowerCase();
+        
+        // Categorización simple
         let category = 'otros';
         let catLabel = 'Varios';
 
@@ -114,6 +99,7 @@ function processData(rows) {
             category = 'perro'; catLabel = 'Perro';
         }
 
+        // Imagen
         let img = "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=400";
         for (const key of keywords) {
             if (lowerName.includes(key)) {
@@ -131,11 +117,10 @@ function processData(rows) {
             prices: []
         };
 
-        // Asignación correcta: Columna "X KG" -> Etiqueta "Por KG"
+        // Solo agregamos la opción de precio si es mayor a 0
         if (!isNaN(priceKg) && priceKg > 0) {
             product.prices.push({ type: 'Por KG', price: priceKg });
         }
-        // Asignación correcta: Columna "BOLSA" -> Etiqueta "Bolsa Cerrada"
         if (!isNaN(priceCerrada) && priceCerrada > 0) {
             product.prices.push({ type: 'Bolsa Cerrada', price: priceCerrada });
         }
@@ -143,6 +128,7 @@ function processData(rows) {
         allProducts.push(product);
     }
     
+    // UI: Ocultar loader y mostrar grid
     const loader = document.getElementById('loader');
     const grid = document.getElementById('product-grid');
     if(loader) loader.style.display = 'none';
@@ -310,7 +296,7 @@ function closeAllModals() {
     if(overlay) overlay.classList.remove('active');
 }
 
-// --- USUARIO ---
+// --- USUARIO Y CHECKOUT ---
 
 function openLoginOrProfile() {
     if (currentUser) {
@@ -340,27 +326,16 @@ function checkEnter(event, action) {
 function handleLoginCheck() {
     const phoneInput = document.getElementById('login-phone');
     const phone = phoneInput.value.trim();
-    
     if (phone.length < 8) {
         alert("Por favor ingresa un número válido");
         return;
     }
-
     const storedUsers = JSON.parse(localStorage.getItem('peluditos_users_db') || '{}');
-    
     if (storedUsers[phone]) {
         currentUser = storedUsers[phone];
         localStorage.setItem('peluditos_user', JSON.stringify(currentUser));
         closeAllModals();
         updateUserUI();
-        Swal.fire({
-            icon: 'success',
-            title: `¡Hola de nuevo ${currentUser.nombre}!`,
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        });
     } else {
         document.getElementById('step-phone').classList.add('hidden');
         document.getElementById('step-name').classList.remove('hidden');
@@ -371,30 +346,18 @@ function handleLoginCheck() {
 function handleRegister() {
     const phone = document.getElementById('login-phone').value.trim();
     const name = document.getElementById('login-name').value.trim();
-    
     if (name.length < 2) {
         alert("Por favor dinos tu nombre");
         return;
     }
-
     const newUser = { nombre: name, telefono: phone, history: [] };
     const storedUsers = JSON.parse(localStorage.getItem('peluditos_users_db') || '{}');
     storedUsers[phone] = newUser;
     localStorage.setItem('peluditos_users_db', JSON.stringify(storedUsers));
-
     currentUser = newUser;
     localStorage.setItem('peluditos_user', JSON.stringify(currentUser));
-    
     closeAllModals();
     updateUserUI();
-    Swal.fire({
-        icon: 'success',
-        title: `¡Bienvenido/a ${name}!`,
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000
-    });
 }
 
 function loadUser() {
@@ -417,11 +380,9 @@ function updateUserUI() {
         const profileName = document.getElementById('profile-name');
         const profilePhone = document.getElementById('profile-phone');
         const profileInit = document.getElementById('profile-initial');
-        
         if(profileName) profileName.textContent = currentUser.nombre;
         if(profilePhone) profilePhone.textContent = currentUser.telefono;
         if(profileInit) profileInit.textContent = currentUser.nombre.charAt(0).toUpperCase();
-        
         loadHistory();
     } else {
         const btnDisplay = document.querySelector('#user-btn-display span');
@@ -435,12 +396,9 @@ function logout() {
     location.reload();
 }
 
-// --- CHECKOUT ---
-
 function toggleAddress(show) {
     const addrSection = document.getElementById('address-section');
     const delText = document.getElementById('delivery-text');
-    
     if (show) {
         addrSection.classList.remove('hidden');
         delText.textContent = "Costo se coordina por WhatsApp";
@@ -455,14 +413,11 @@ function checkout() {
         Swal.fire("Carrito vacío", "Agrega productos antes de finalizar.", "warning");
         return;
     }
-    
     closeAllModals();
-    
     if (currentUser) {
         document.getElementById('cx-name').value = currentUser.nombre;
         document.getElementById('cx-phone').value = currentUser.telefono;
     }
-    
     document.getElementById('checkout-modal').classList.add('active');
     document.getElementById('cart-overlay').classList.add('active');
 }
@@ -483,7 +438,6 @@ function sendOrder() {
         Swal.fire("Faltan datos", "Por favor completa tu nombre y teléfono", "error");
         return;
     }
-
     if (deliveryType === 'delivery') {
         const calle = document.getElementById('cx-calle').value;
         if (!calle) {
@@ -495,7 +449,6 @@ function sendOrder() {
     let msg = `*HOLA! NUEVO PEDIDO WEB* 🐾\n\n`;
     msg += `👤 *Cliente:* ${name}\n`;
     msg += `📱 *Tel:* ${phone}\n\n`;
-    
     msg += `🛒 *PEDIDO:*\n`;
     let total = 0;
     cart.forEach(item => {
@@ -503,7 +456,6 @@ function sendOrder() {
         total += sub;
         msg += `- ${item.qty}x ${item.name} (${item.type})\n`;
     });
-    
     msg += `\n💰 *TOTAL: $${total.toLocaleString('es-AR')}*\n`;
     msg += `💳 *Pago:* ${paymentType.toUpperCase()}\n`;
     msg += `🚚 *Entrega:* ${deliveryType.toUpperCase()}\n`;
@@ -515,10 +467,8 @@ function sendOrder() {
         msg += `📍 *Dirección:* ${calle} ${piso ? '('+piso+')' : ''}\n`;
         if(entre) msg += `   Entre: ${entre}\n`;
     }
-    
     if (obs) msg += `📝 *Nota:* ${obs}\n`;
 
-    // Historial
     if (currentUser) {
         const storedUsers = JSON.parse(localStorage.getItem('peluditos_users_db') || '{}');
         if (storedUsers[currentUser.telefono]) {
@@ -531,9 +481,7 @@ function sendOrder() {
             localStorage.setItem('peluditos_users_db', JSON.stringify(storedUsers));
         }
     }
-
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
-    
     cart = [];
     updateCartUI();
     closeAllModals();
@@ -542,10 +490,8 @@ function sendOrder() {
 function loadHistory() {
     const hContainer = document.getElementById('history-container');
     if (!hContainer || !currentUser) return;
-    
     const storedUsers = JSON.parse(localStorage.getItem('peluditos_users_db') || '{}');
     const userRecord = storedUsers[currentUser.telefono];
-    
     if (userRecord && userRecord.history && userRecord.history.length > 0) {
         hContainer.innerHTML = userRecord.history.map(h => `
             <div class="history-card">
