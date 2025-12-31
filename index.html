@@ -1,341 +1,1400 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="description" content="Peluditos Petshop en Necochea. Catálogo actualizado con los mejores precios.">
-    <meta name="theme-color" content="#F97316">
+    <meta name="description" content="Peluditos Petshop en Necochea. Catálogo actualizado con los mejores precios en alimento y accesorios.">
+    <meta name="theme-color" content="#E67E22">
     
-    <title>Peluditos Petshop | Tu mascota feliz</title>
+    <title>Peluditos Petshop | Necochea</title>
 
+    <!-- Google Fonts: Outfit (Moderno) + Fredoka (Friendly) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- FontAwesome (Mantener para compatibilidad con script) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
+            darkMode: ['class', '[data-theme="dark"]'],
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['Outfit', 'sans-serif'],
-                        heading: ['Fredoka', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif'],
                     },
                     colors: {
-                        primary: '#F97316', // Orange 500
-                        'primary-dark': '#C2410C', // Orange 700
-                        secondary: '#14B8A6', // Teal 500
-                        dark: '#111827',
-                        'dark-card': '#1F2937',
+                        primary: 'var(--primary)',
+                        'primary-dark': 'var(--primary-dark)',
+                        secondary: 'var(--secondary)',
+                        text: 'var(--text)',
+                        'text-light': 'var(--text-light)',
+                        bg: 'var(--bg)',
+                        'card-bg': 'var(--card-bg)',
+                        border: 'var(--border)',
+                        input: 'var(--input-bg)',
+                        whatsapp: 'var(--whatsapp)',
+                        offer: 'var(--offer)',
                     }
                 }
             }
         }
     </script>
 
+    <!-- Custom CSS (Variables & Animations) -->
     <link rel="stylesheet" href="styles.css">
-</head>
-<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans antialiased flex flex-col min-h-screen">
 
-    <nav class="fixed top-0 w-full z-50 transition-all duration-300" id="navbar">
-        <div class="absolute inset-0 bg-white/80 dark:bg-dark/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm"></div>
-        <div class="container mx-auto px-4 py-3 relative flex justify-between items-center">
-            <a href="#" class="flex items-center gap-2 group">
-                <div class="bg-primary/10 p-2 rounded-full group-hover:bg-primary/20 transition-colors">
-                    <i class="fa-solid fa-paw text-2xl text-primary transform group-hover:scale-110 transition-transform"></i>
+    <!-- Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R43T32J1Z1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-R43T32J1Z1');
+    </script>
+</head>
+<body class="antialiased min-h-screen relative pb-24">
+
+    <!-- HEADER -->
+    <header class="fixed w-full top-0 z-50 glass-effect transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2 group" onclick="location.reload()" aria-label="Recargar">
+                <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <i class="fa-solid fa-paw text-xl transform -rotate-12 group-hover:rotate-0 transition-transform"></i>
                 </div>
-                <h1 class="font-heading font-semibold text-2xl text-gray-800 dark:text-white tracking-wide">
-                    Peluditos<span class="text-primary">.</span>
-                </h1>
+                <span class="font-display font-bold text-xl md:text-2xl text-primary tracking-tight">Peluditos</span>
             </a>
 
-            <div class="flex items-center gap-3 md:gap-4">
-                <button id="theme-toggle" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all" aria-label="Cambiar tema">
-                    <i class="fa-solid fa-moon dark:hidden"></i>
-                    <i class="fa-solid fa-sun hidden dark:block"></i>
-                </button>
-
-                <button onclick="openProfile()" class="w-10 h-10 rounded-full bg-secondary/10 text-secondary hover:bg-secondary hover:text-white transition-all flex items-center justify-center relative group" aria-label="Perfil">
-                    <i class="fa-solid fa-user"></i>
-                </button>
-
-                <button id="cart-btn" onclick="openCart()" class="relative bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-full font-medium transition-all shadow-lg shadow-primary/30 flex items-center gap-2 group z-50">
-                    <i class="fa-solid fa-cart-shopping group-hover:animate-bounce"></i>
-                    <span class="hidden md:inline">Tu Pedido</span>
-                    <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-dark font-bold">0</span>
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <header class="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden">
-        <div class="absolute inset-0 z-0">
-            <div class="absolute -top-20 -right-20 w-96 h-96 bg-primary/20 rounded-full blur-3xl opacity-50"></div>
-            <div class="absolute top-40 -left-20 w-72 h-72 bg-secondary/20 rounded-full blur-3xl opacity-50"></div>
-        </div>
-
-        <div class="container mx-auto px-4 relative z-10">
-            <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-                <div class="w-full md:w-1/2 text-center md:text-left space-y-6">
-                    <div class="inline-block bg-orange-100 dark:bg-orange-900/30 text-primary px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide mb-2 animate-fade-in-up">
-                        🐾 Envíos en Necochea
-                    </div>
-                    <h2 class="font-heading text-4xl md:text-6xl font-bold leading-tight text-gray-900 dark:text-white animate-fade-in-up" style="animation-delay: 0.1s;">
-                        Lo mejor para tu <br>
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-400">mejor amigo</span>
-                    </h2>
-                    <p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed max-w-lg mx-auto md:mx-0 animate-fade-in-up" style="animation-delay: 0.2s;">
-                        Alimentos de primera calidad, accesorios y todo lo que tu mascota necesita para ser feliz.
-                    </p>
-                    
-                    <div class="relative max-w-md mx-auto md:mx-0 group animate-fade-in-up" style="animation-delay: 0.3s;">
-                        <input type="text" id="search-input" placeholder="¿Qué buscas? (ej. Agility...)" 
-                            class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-dark-card border-2 border-gray-100 dark:border-gray-700 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none shadow-lg shadow-gray-200/50 dark:shadow-none transition-all placeholder-gray-400">
-                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors text-lg"></i>
-                    </div>
+            <!-- Actions -->
+            <div class="flex items-center gap-3">
+                <!-- Status Badge -->
+                <div id="shop-status" class="status-badge closed hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors">
+                    <span class="status-circle w-2 h-2 rounded-full bg-current"></span>
+                    <span id="status-text">Cargando...</span>
                 </div>
 
-                <div class="w-full md:w-1/2 flex justify-center relative animate-float">
-                   <div class="relative w-full max-w-md aspect-square">
-                       <div class="absolute inset-4 bg-gradient-to-tr from-primary to-orange-300 rounded-full opacity-20 dark:opacity-40 animate-pulse-slow"></div>
-                       <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=1000&auto=format&fit=crop" 
-                            alt="Perro feliz" 
-                            class="w-full h-full object-cover rounded-[3rem] shadow-2xl rotate-3 hover:rotate-0 transition-all duration-500 z-10 relative">
-                        
-                        <div class="absolute -bottom-6 -left-6 bg-white/90 dark:bg-dark-card/90 backdrop-blur-md p-4 rounded-2xl shadow-xl z-20 flex items-center gap-3 border border-white/50 dark:border-gray-700 animate-bounce-slow">
-                            <div class="bg-green-100 text-green-600 p-2 rounded-full">
-                                <i class="fa-solid fa-shield-dog text-xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">Calidad</p>
-                                <p class="font-bold text-gray-800 dark:text-white">Premium</p>
-                            </div>
-                        </div>
-                   </div>
-                </div>
+                <!-- Theme Toggle -->
+                <button id="themeBtn" onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-input hover:bg-border text-text flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-primary/50" aria-label="Cambiar tema">
+                    <i class="fa-solid fa-moon text-lg"></i>
+                </button>
+
+                <!-- User Button -->
+                <button id="user-btn-display" onclick="openLoginOrProfile()" class="flex items-center gap-2 bg-primary/10 hover:bg-primary text-primary hover:text-white px-4 py-2 rounded-full font-medium transition-all duration-300 group" aria-label="Usuario">
+                    <i class="fa-regular fa-user"></i>
+                    <span class="hidden sm:inline text-sm">Ingresar</span>
+                </button>
             </div>
         </div>
     </header>
 
-    <section class="container mx-auto px-4 mb-10 overflow-x-auto pb-4 hide-scrollbar">
-        <div class="flex md:justify-center gap-3 md:gap-4 min-w-max px-2" id="category-filters">
-            <button class="filter-btn active" data-category="all">
-                <i class="fa-solid fa-border-all"></i> Todo
-            </button>
-            <button class="filter-btn" data-category="perro">
-                <i class="fa-solid fa-dog"></i> Perros
-            </button>
-            <button class="filter-btn" data-category="gato">
-                <i class="fa-solid fa-cat"></i> Gatos
-            </button>
-            <button class="filter-btn" data-category="accesorios">
-                <i class="fa-solid fa-bone"></i> Accesorios
-            </button>
-        </div>
-    </section>
+    <main class="pt-20">
+        <!-- HERO SECTION -->
+        <section class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 animate-fade-in">
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-secondary to-cyan-700 shadow-xl h-[280px] md:h-[380px] flex items-center group">
+                <!-- Background Image & Overlay -->
+                <div class="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
+                    <img src="img/hero-bg.jpg" alt="Perro y gato felices" class="w-full h-full object-cover object-center opacity-40 mix-blend-overlay">
+                    <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+                </div>
 
-    <main class="container mx-auto px-4 pb-20 flex-grow">
-        <div id="loading" class="text-center py-20 hidden">
-            <div class="inline-block animate-spin text-4xl text-primary mb-4"><i class="fa-solid fa-circle-notch"></i></div>
-            <p class="text-gray-500 font-medium">Cargando catálogo...</p>
-        </div>
-        
-        <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8"></div>
+                <!-- Content -->
+                <div class="relative z-10 px-6 md:px-12 w-full md:w-2/3 lg:w-1/2 text-white">
+                    <span class="inline-block px-3 py-1 rounded-full bg-accent/20 border border-accent/50 text-accent text-xs font-bold mb-4 backdrop-blur-sm animate-pulse">
+                        🔥 Ofertas de la semana
+                    </span>
+                    <h1 class="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 drop-shadow-md">
+                        Mimos para <br><span class="text-accent">tu mejor amigo</span>
+                    </h1>
+                    <p class="text-gray-100 text-lg mb-6 max-w-md leading-relaxed hidden sm:block">
+                        Encuentra el mejor alimento y accesorios. Calidad garantizada para verlos felices.
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 flex items-center gap-3 hover:bg-white/20 transition-colors cursor-default">
+                            <i class="fa-solid fa-gift text-accent text-xl"></i>
+                            <div class="text-sm">
+                                <span class="block font-bold">Promo 10+1</span>
+                                <span class="text-gray-200 text-xs">Sumá 10kg, llevate 1kg gratis</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <div id="no-results" class="hidden text-center py-20">
-            <img src="https://cdn-icons-png.flaticon.com/512/7486/7486747.png" alt="No encontrado" class="w-32 mx-auto opacity-50 mb-4 grayscale">
-            <h3 class="text-xl font-heading font-semibold text-gray-600 dark:text-gray-300">No encontramos lo que buscas</h3>
-            <p class="text-gray-500">Intenta con otro término o categoría.</p>
+        <!-- INFO LOCAL -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-card-bg p-4 rounded-xl border border-border flex items-center gap-3 shadow-sm">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-truck-fast"></i></div>
+                    <div><div class="font-bold text-sm">Envíos</div><div class="text-xs text-text-light">A todo Necochea</div></div>
+                </div>
+                <div class="bg-card-bg p-4 rounded-xl border border-border flex items-center gap-3 shadow-sm">
+                    <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><i class="fa-solid fa-credit-card"></i></div>
+                    <div><div class="font-bold text-sm">Pagos</div><div class="text-xs text-text-light">Efvo / Transf</div></div>
+                </div>
+                <div class="bg-card-bg p-4 rounded-xl border border-border flex items-center gap-3 shadow-sm">
+                    <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><i class="fa-solid fa-store"></i></div>
+                    <div><div class="font-bold text-sm">Local</div><div class="text-xs text-text-light">Retiro sin cargo</div></div>
+                </div>
+                <div class="bg-card-bg p-4 rounded-xl border border-border flex items-center gap-3 shadow-sm">
+                    <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center"><i class="fa-solid fa-headset"></i></div>
+                    <div><div class="font-bold text-sm">Soporte</div><div class="text-xs text-text-light">WhatsApp Directo</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DESTACADOS -->
+        <section id="featured-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-display font-bold text-2xl text-text"><i class="fa-solid fa-fire text-offer mr-2"></i>Destacados</h2>
+            </div>
+            <div id="featured-grid" class="flex gap-4 overflow-x-auto pb-4 hide-scrollbar snap-x">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+        <!-- CONTROLS & FILTERS -->
+        <div class="sticky top-16 z-40 bg-bg/95 backdrop-blur-md py-4 transition-all" id="controls-bar">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+                
+                <!-- Search & Sort Row -->
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="relative flex-grow group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-magnifying-glass text-text-light group-focus-within:text-primary transition-colors"></i>
+                        </div>
+                        <input type="text" id="searchInput" onkeyup="applyFilters()" 
+                            class="block w-full pl-11 pr-4 py-3 bg-card-bg border border-border rounded-xl text-text placeholder-text-light focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
+                            placeholder="Buscar marca, tipo de alimento...">
+                        <span id="results-count" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-md hidden">0</span>
+                    </div>
+                    
+                    <div class="flex-shrink-0">
+                        <select id="priceSort" onchange="applyFilters()" 
+                            class="block w-full md:w-48 pl-4 pr-10 py-3 bg-card-bg border border-border rounded-xl text-text focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer shadow-sm appearance-none font-medium">
+                            <option value="default">✨ Relevancia</option>
+                            <option value="asc">💲 Menor Precio</option>
+                            <option value="desc">💰 Mayor Precio</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Category Pills -->
+                <nav class="flex space-x-2 overflow-x-auto hide-scrollbar pb-2">
+                    <button class="filter-btn active whitespace-nowrap px-5 py-2 rounded-full border border-transparent font-display font-medium text-sm transition-all duration-200 bg-primary text-white shadow-lg shadow-primary/30 transform scale-105" 
+                        onclick="setCategory('all', this)">
+                        Todo
+                    </button>
+                    <button class="filter-btn whitespace-nowrap px-5 py-2 rounded-full bg-card-bg border border-border text-text-light hover:border-primary hover:text-primary font-display font-medium text-sm transition-all duration-200 flex items-center gap-2" 
+                        onclick="setCategory('perro', this)">
+                        <i class="fa-solid fa-dog"></i> Perros
+                    </button>
+                    <button class="filter-btn whitespace-nowrap px-5 py-2 rounded-full bg-card-bg border border-border text-text-light hover:border-primary hover:text-primary font-display font-medium text-sm transition-all duration-200 flex items-center gap-2" 
+                        onclick="setCategory('gato', this)">
+                        <i class="fa-solid fa-cat"></i> Gatos
+                    </button>
+                    <button class="filter-btn whitespace-nowrap px-5 py-2 rounded-full bg-card-bg border border-border text-text-light hover:border-primary hover:text-primary font-display font-medium text-sm transition-all duration-200" 
+                        onclick="setCategory('otros', this)">
+                        Otros
+                    </button>
+                </nav>
+            </div>
         </div>
+
+        <!-- PRODUCT GRID -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 min-h-[50vh]">
+            
+            <!-- Loader -->
+            <div id="loader" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div class="bg-card-bg rounded-2xl h-[380px] skeleton border border-border"></div>
+                <div class="bg-card-bg rounded-2xl h-[380px] skeleton border border-border hidden sm:block"></div>
+                <div class="bg-card-bg rounded-2xl h-[380px] skeleton border border-border hidden md:block"></div>
+                <div class="bg-card-bg rounded-2xl h-[380px] skeleton border border-border hidden lg:block"></div>
+            </div>
+
+            <!-- Grid Content -->
+            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden animate-slide-up">
+                <!-- Injected via JS -->
+            </div>
+
+        </section>
+
+        <!-- TESTIMONIOS -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-border">
+            <h2 class="font-display font-bold text-2xl text-text text-center mb-8">Lo que dicen nuestros clientes</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-card-bg p-6 rounded-2xl shadow-sm border border-border relative">
+                    <i class="fa-solid fa-quote-left text-4xl text-primary/10 absolute top-4 left-4"></i>
+                    <p class="text-text-light mb-4 relative z-10 italic">"Excelente atención y precios. Siempre me llega el pedido rapidísimo. Recomiendo mucho."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">M</div>
+                        <div><div class="font-bold text-sm text-text">María G.</div><div class="text-xs text-yellow-500"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div></div>
+                    </div>
+                </div>
+                <div class="bg-card-bg p-6 rounded-2xl shadow-sm border border-border relative">
+                    <i class="fa-solid fa-quote-left text-4xl text-primary/10 absolute top-4 left-4"></i>
+                    <p class="text-text-light mb-4 relative z-10 italic">"La promo 10+1 es genial, me ahorro bastante en el alimento de mis perros."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">C</div>
+                        <div><div class="font-bold text-sm text-text">Carlos R.</div><div class="text-xs text-yellow-500"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div></div>
+                    </div>
+                </div>
+                <div class="bg-card-bg p-6 rounded-2xl shadow-sm border border-border relative hidden md:block">
+                    <i class="fa-solid fa-quote-left text-4xl text-primary/10 absolute top-4 left-4"></i>
+                    <p class="text-text-light mb-4 relative z-10 italic">"Muy buena variedad de marcas. Encontré justo la que necesitaba mi gatita."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">L</div>
+                        <div><div class="font-bold text-sm text-text">Lucía P.</div><div class="text-xs text-yellow-500"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <footer class="bg-white dark:bg-dark-card border-t border-gray-100 dark:border-gray-800 pt-12 pb-24 md:pb-12 mt-auto">
-        <div class="container mx-auto px-4">
-            <div class="grid md:grid-cols-3 gap-8 text-center md:text-left">
-                <div class="space-y-4">
-                    <a href="#" class="flex items-center justify-center md:justify-start gap-2">
-                        <i class="fa-solid fa-paw text-3xl text-primary"></i>
-                        <h2 class="font-heading font-bold text-2xl text-gray-800 dark:text-white">Peluditos.</h2>
-                    </a>
-                    <p class="text-gray-500 text-sm leading-relaxed">
-                        Cuidando a tus mascotas con los mejores productos y la mejor atención en Necochea.
-                    </p>
-                </div>
-                
-                <div class="space-y-4">
-                    <h3 class="font-heading font-semibold text-lg text-gray-800 dark:text-white">Contacto y Horarios</h3>
-                    <ul class="space-y-3 text-sm text-gray-500 dark:text-gray-400">
-                        <li class="flex items-center justify-center md:justify-start gap-3">
-                            <i class="fa-solid fa-location-dot text-secondary"></i> Necochea, Buenos Aires
-                        </li>
-                        <li class="flex items-center justify-center md:justify-start gap-3">
-                            <i class="fa-brands fa-whatsapp text-secondary"></i> 2262 67-7026
-                        </li>
-                        <li class="flex items-center justify-center md:justify-start gap-3">
-                            <i class="fa-regular fa-clock text-secondary"></i> Lun - Sáb: 9:00 - 13:00 / 16:30 - 20:30
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="font-heading font-semibold text-lg text-gray-800 dark:text-white">Síguenos</h3>
-                    <div class="flex justify-center md:justify-start gap-4">
-                        <a href="#" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-primary hover:text-white transition-all">
-                            <i class="fa-brands fa-instagram text-xl"></i>
-                        </a>
-                        <a href="#" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-blue-600 hover:text-white transition-all">
-                            <i class="fa-brands fa-facebook-f text-xl"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="border-t border-gray-100 dark:border-gray-800 mt-10 pt-6 text-center text-xs text-gray-400">
-                &copy; 2025 Peluditos Petshop. Todos los derechos reservados.
-            </div>
-        </div>
-    </footer>
-
-    <button id="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
-            class="fixed bottom-24 md:bottom-8 right-6 w-12 h-12 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center translate-y-20 opacity-0 transition-all duration-500 z-40 hover:bg-primary-dark">
+    <!-- FLOATING ACTIONS -->
+    <button id="backToTop" onclick="scrollToTop()" class="fixed bottom-24 right-6 z-30 w-10 h-10 bg-card-bg text-text-light border border-border rounded-full shadow-lg flex items-center justify-center transition-all duration-300 translate-y-20 opacity-0 hover:bg-primary hover:text-white" aria-label="Volver arriba">
         <i class="fa-solid fa-arrow-up"></i>
     </button>
+    <a href="#" id="supportBtn" target="_blank" class="fixed bottom-6 left-6 z-40 w-14 h-14 bg-white text-whatsapp rounded-full shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 flex items-center justify-center border border-border" aria-label="WhatsApp">
+        <i class="fa-brands fa-whatsapp text-3xl"></i>
+    </a>
 
-    <div id="cart-modal" class="fixed inset-0 z-[60] hidden">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onclick="closeAllModals()"></div>
-        <div class="absolute top-0 right-0 h-full w-full md:w-[450px] bg-white dark:bg-dark-card shadow-2xl transform transition-transform duration-300 translate-x-full flex flex-col" id="cart-content">
-            <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-dark-card z-10">
-                <h3 class="font-heading font-semibold text-xl flex items-center gap-2">
-                    <i class="fa-solid fa-basket-shopping text-primary"></i> Tu Carrito
-                </h3>
-                <button onclick="closeAllModals()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+    <button onclick="toggleCart()" class="fixed bottom-6 right-6 z-40 w-16 h-16 bg-text text-bg rounded-full shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center group" aria-label="Carrito">
+        <div class="relative">
+            <i class="fa-solid fa-basket-shopping text-2xl group-hover:rotate-12 transition-transform"></i>
+            <div id="cart-count" class="absolute -top-3 -right-3 w-6 h-6 bg-offer text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm transform scale-0 transition-transform duration-200" style="display:none">0</div>
+        </div>
+    </button>
+
+    <!-- OVERLAY -->
+    <div id="cart-overlay" class="cart-overlay fixed inset-0 bg-black/50 backdrop-blur-sm z-50" onclick="closeAllModals()"></div>
+
+    <!-- CART MODAL -->
+    <div id="cart-modal" class="cart-modal fixed inset-y-0 right-0 w-full max-w-md bg-card-bg z-[60] shadow-2xl flex flex-col">
+        <div class="p-5 border-b border-border flex justify-between items-center bg-card-bg/95 backdrop-blur">
+            <h3 class="font-display font-bold text-xl flex items-center gap-2">
+                <i class="fa-solid fa-bag-shopping text-primary"></i> Mi Pedido
+            </h3>
+            <button onclick="closeAllModals()" class="w-8 h-8 rounded-full hover:bg-input flex items-center justify-center text-text-light hover:text-text transition-colors text-xl">
+                &times;
+            </button>
+        </div>
+        
+        <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-4">
+            <!-- Items injected via JS -->
+        </div>
+        
+        <div class="p-5 border-t border-border bg-input/30">
+            <div class="flex justify-between items-end mb-4">
+                <span class="text-text-light text-sm font-medium">Total estimado</span>
+                <span id="cart-total" class="font-display font-bold text-2xl text-primary">$0</span>
             </div>
-            <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
-            <div class="p-5 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 space-y-4">
-                <div class="flex justify-between items-end">
-                    <span class="text-gray-500 text-sm">Total a pagar</span>
-                    <span id="cart-total" class="text-2xl font-bold font-heading text-primary">$0</span>
-                </div>
-                <button onclick="checkout()" class="w-full py-3.5 bg-primary hover:bg-primary-dark text-white rounded-xl font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all flex justify-center items-center gap-2">
-                    Completar Pedido <i class="fa-solid fa-arrow-right"></i>
-                </button>
-            </div>
+            <button onclick="checkout()" class="w-full py-4 bg-whatsapp hover:bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-500/30 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                <span>Iniciar Pedido</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
         </div>
     </div>
 
-    <div id="login-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeAllModals()"></div>
-        <div class="bg-white dark:bg-dark-card w-full max-w-md rounded-2xl shadow-2xl relative z-10 overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="login-content">
-            <div class="bg-primary p-6 text-center">
-                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-md">
-                    <i class="fa-solid fa-user text-2xl text-white"></i>
-                </div>
-                <h3 class="text-white font-heading text-2xl font-bold">Bienvenido</h3>
-                <p class="text-orange-100 text-sm">Ingresa tus datos para agilizar tus pedidos</p>
-            </div>
-            <div class="p-8 space-y-5">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
-                    <input type="text" id="login-name" class="w-full pl-4 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary outline-none" placeholder="Tu nombre">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
-                    <input type="tel" id="login-phone" class="w-full pl-4 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary outline-none" placeholder="Ej: 2262 123456">
-                </div>
-                <button onclick="saveUser()" class="w-full py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold">Guardar Datos</button>
-            </div>
+    <!-- CHECKOUT MODAL -->
+    <div id="checkout-modal" class="cart-modal fixed inset-y-0 right-0 w-full max-w-md bg-card-bg z-[60] shadow-2xl flex flex-col translate-x-full transition-transform duration-300">
+        <div class="p-5 border-b border-border flex justify-between items-center bg-card-bg">
+            <h3 class="font-display font-bold text-xl text-primary">Finalizar Pedido</h3>
+            <button onclick="closeCheckout()" class="text-text-light hover:text-text text-xl">&times;</button>
         </div>
-    </div>
-
-    <div id="checkout-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeAllModals()"></div>
-        <div class="bg-white dark:bg-dark-card w-full max-w-lg rounded-2xl shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300" id="checkout-content">
-            <div class="sticky top-0 bg-white dark:bg-dark-card p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center z-20">
-                <h3 class="font-heading font-bold text-xl">Finalizar Compra</h3>
-                <button onclick="closeAllModals()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
+        
+        <div class="flex-1 overflow-y-auto p-5 space-y-6">
+            <!-- Datos Cliente -->
+            <div class="space-y-3">
+                <label class="block text-sm font-bold text-text mb-1">Tus Datos</label>
+                <div class="grid grid-cols-1 gap-3">
+                    <input type="text" id="cx-name" class="w-full p-3 bg-input border border-border rounded-lg text-text focus:ring-2 focus:ring-primary/50" placeholder="Nombre completo *" required>
+                    <input type="tel" id="cx-phone" class="w-full p-3 bg-input border border-border rounded-lg text-text focus:ring-2 focus:ring-primary/50" placeholder="Teléfono / WhatsApp *" required>
+                </div>
             </div>
-            <div class="p-6 space-y-6">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Método de Entrega</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="cursor-pointer relative">
-                            <input type="radio" name="delivery" value="retiro" checked onchange="toggleDelivery(false)" class="peer sr-only">
-                            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 peer-checked:border-primary peer-checked:bg-primary/5 transition-all text-center h-full">
-                                <i class="fa-solid fa-store text-2xl mb-2 text-gray-400 peer-checked:text-primary"></i>
-                                <div class="font-semibold text-sm">Retiro en Local</div>
+
+            <!-- Entrega -->
+            <div class="space-y-3">
+                <label class="block text-sm font-bold text-text mb-1">Método de Entrega</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="radio-card cursor-pointer">
+                        <input type="radio" name="deliveryType" value="retiro" checked onchange="toggleAddress(false)" class="hidden">
+                        <div class="radio-card-content p-4 border border-border rounded-xl flex flex-col items-center gap-2 text-center h-full transition-all">
+                            <div class="radio-circle w-5 h-5 rounded-full border-2 border-text-light mb-1"></div>
+                            <div>
+                                <div class="font-bold text-sm">Retiro</div>
+                                <div class="text-xs text-text-light">Sin costo</div>
                             </div>
-                        </label>
-                        <label class="cursor-pointer relative">
-                            <input type="radio" name="delivery" value="envio" onchange="toggleDelivery(true)" class="peer sr-only">
-                            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 peer-checked:border-primary peer-checked:bg-primary/5 transition-all text-center h-full">
-                                <i class="fa-solid fa-motorcycle text-2xl mb-2 text-gray-400 peer-checked:text-primary"></i>
-                                <div class="font-semibold text-sm">Envío a Domicilio</div>
+                        </div>
+                    </label>
+                    <label class="radio-card cursor-pointer">
+                        <input type="radio" name="deliveryType" id="opt-delivery" value="delivery" onchange="toggleAddress(true)" class="hidden">
+                        <div class="radio-card-content p-4 border border-border rounded-xl flex flex-col items-center gap-2 text-center h-full transition-all">
+                            <div class="radio-circle w-5 h-5 rounded-full border-2 border-text-light mb-1"></div>
+                            <div>
+                                <div class="font-bold text-sm">Delivery</div>
+                                <div id="delivery-text" class="text-xs text-text-light">A domicilio</div>
                             </div>
-                        </label>
-                    </div>
-                </div>
-                <div id="delivery-fields" class="hidden space-y-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 animate-fade-in">
-                    <input type="text" id="cx-calle" placeholder="Dirección (Calle y Número)" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 outline-none text-sm">
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="text" id="cx-entre" placeholder="Entre calles" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 outline-none text-sm">
-                        <input type="text" id="cx-piso" placeholder="Piso/Depto" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 outline-none text-sm">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Forma de Pago</label>
-                    <select id="cx-payment" class="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 outline-none">
-                        <option value="efectivo">💵 Efectivo</option>
-                        <option value="transferencia">🏦 Transferencia</option>
-                        <option value="debito">💳 Tarjeta Débito / MP</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Notas</label>
-                    <textarea id="cx-obs" rows="2" placeholder="¿Algo más?" class="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 outline-none text-sm resize-none"></textarea>
+                        </div>
+                    </label>
                 </div>
             </div>
-            <div class="p-5 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                <button onclick="sendOrder()" class="w-full py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all flex justify-center items-center gap-2 text-lg">
-                    <i class="fa-brands fa-whatsapp text-2xl"></i> Enviar Pedido
+
+            <!-- Dirección (Condicional) -->
+            <div id="address-section" class="hidden space-y-3 animate-fade-in">
+                <input type="text" id="cx-calle" class="w-full p-3 bg-input border border-border rounded-lg text-text" placeholder="Calle y Altura *">
+                <div class="flex gap-3">
+                    <input type="text" id="cx-piso" class="w-1/2 p-3 bg-input border border-border rounded-lg text-text" placeholder="Piso/Depto">
+                    <input type="text" id="cx-entre" class="w-1/2 p-3 bg-input border border-border rounded-lg text-text" placeholder="Entre calles">
+                </div>
+            </div>
+
+            <!-- Pago -->
+            <div class="space-y-3">
+                <label class="block text-sm font-bold text-text mb-1">Forma de Pago</label>
+                <div class="flex flex-col gap-2">
+                    <label class="radio-card cursor-pointer w-full">
+                        <input type="radio" name="paymentType" value="efectivo" checked class="hidden">
+                        <div class="radio-card-content p-3 border border-border rounded-lg flex items-center gap-3">
+                            <div class="radio-circle w-4 h-4 rounded-full border-2 border-text-light"></div>
+                            <div>
+                                <span class="font-bold text-sm block">Efectivo</span>
+                                <span class="text-xs text-text-light">Pagas al recibir</span>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="radio-card cursor-pointer w-full">
+                        <input type="radio" name="paymentType" value="transferencia" class="hidden">
+                        <div class="radio-card-content p-3 border border-border rounded-lg flex items-center gap-3">
+                            <div class="radio-circle w-4 h-4 rounded-full border-2 border-text-light"></div>
+                            <div>
+                                <span class="font-bold text-sm block">Transferencia</span>
+                                <span class="text-xs text-text-light">Alias / CBU</span>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <textarea id="cx-obs" class="w-full p-3 bg-input border border-border rounded-lg text-text text-sm" rows="2" placeholder="Notas adicionales (ej: timbre no anda)"></textarea>
+        </div>
+
+        <div class="p-5 border-t border-border bg-input/30">
+            <button onclick="sendOrder()" class="w-full py-4 bg-whatsapp hover:bg-green-600 text-white font-bold rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-brands fa-whatsapp text-xl"></i> Enviar Pedido
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGIN MODAL -->
+    <div id="login-modal" class="cart-modal fixed bottom-0 left-0 right-0 top-auto h-auto min-h-[50vh] rounded-t-3xl bg-card-bg z-[60] shadow-[0_-5px_30px_rgba(0,0,0,0.2)] transform translate-y-full transition-transform duration-300">
+        <div class="p-6">
+            <div class="w-12 h-1.5 bg-border rounded-full mx-auto mb-6"></div>
+            <h3 class="text-2xl font-display font-bold text-center mb-2">Bienvenido 👋</h3>
+            <p class="text-center text-text-light mb-8">Ingresa tu teléfono para ver tus pedidos anteriores.</p>
+
+            <div id="step-phone" class="space-y-4">
+                <div class="flex border border-border rounded-xl overflow-hidden bg-input focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+                    <div class="px-4 py-3 bg-border/30 text-text-light font-bold flex items-center border-r border-border">AR +54</div>
+                    <input type="tel" id="login-phone" class="flex-1 p-3 bg-transparent outline-none text-lg text-text font-medium" placeholder="2262123456" onkeyup="checkEnter(event, 'checkPhone')">
+                </div>
+                <button onclick="handleLoginCheck()" class="w-full py-3.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all">Continuar</button>
+            </div>
+
+            <div id="step-name" class="hidden space-y-4 animate-fade-in">
+                <div class="text-center text-primary font-bold mb-2">¡Es tu primera vez aquí!</div>
+                <input type="text" id="login-name" class="w-full p-3 bg-input border border-border rounded-xl text-text outline-none focus:ring-2 focus:ring-primary" placeholder="¿Cómo te llamas?" onkeyup="checkEnter(event, 'register')">
+                <button onclick="handleRegister()" class="w-full py-3.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all">Crear Cuenta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profile-modal" class="cart-modal fixed inset-y-0 right-0 w-full max-w-md bg-card-bg z-[60] shadow-2xl flex flex-col translate-x-full transition-transform duration-300">
+        <div class="p-5 border-b border-border flex justify-between items-center">
+            <h3 class="font-display font-bold text-xl">Mi Perfil</h3>
+            <button onclick="closeAllModals()" class="text-2xl">&times;</button>
+        </div>
+        <div class="p-5 flex-1 overflow-y-auto">
+            <div class="bg-input rounded-2xl p-5 flex items-center gap-4 mb-6 border border-border">
+                <div id="profile-initial" class="w-14 h-14 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md">
+                    U
+                </div>
+                <div>
+                    <h3 id="profile-name" class="font-bold text-lg text-text">Usuario</h3>
+                    <span id="profile-phone" class="text-text-light text-sm">...</span>
+                </div>
+                <button onclick="logout()" class="ml-auto text-offer hover:bg-offer/10 p-2 rounded-full transition-colors" title="Cerrar Sesión">
+                    <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </div>
-        </div>
-    </div>
-
-    <div id="profile-modal" class="fixed inset-0 z-[60] hidden">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onclick="closeAllModals()"></div>
-        <div class="absolute top-0 right-0 h-full w-full md:w-[400px] bg-white dark:bg-dark-card shadow-2xl transform transition-transform duration-300 translate-x-full flex flex-col" id="profile-content">
-            <div class="h-32 bg-gradient-to-r from-primary to-orange-400 relative">
-                <button onclick="closeAllModals()" class="absolute top-4 right-4 text-white hover:rotate-90 transition-transform"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
-            <div class="px-6 -mt-12 mb-6">
-                <div class="w-24 h-24 bg-white dark:bg-dark-card rounded-full p-1 shadow-lg mx-auto md:mx-0">
-                    <div id="profile-initial" class="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-3xl font-bold text-primary">U</div>
-                </div>
-                <div class="mt-4 text-center md:text-left">
-                    <h3 id="profile-name" class="font-heading font-bold text-2xl">Usuario</h3>
-                    <p id="profile-phone" class="text-gray-500 dark:text-gray-400">...</p>
-                </div>
-                <div class="mt-4 flex justify-center md:justify-start">
-                    <button onclick="logout()" class="text-red-500 text-sm font-medium hover:underline flex items-center gap-1">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
-                    </button>
-                </div>
-            </div>
-            <div class="flex-1 overflow-y-auto px-6 pb-6">
-                <h4 class="font-heading font-semibold text-lg mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">Historial de Pedidos</h4>
-                <div id="history-container" class="space-y-4"></div>
+            
+            <h4 class="font-bold text-text-light uppercase text-xs tracking-wider mb-4">Historial de Pedidos</h4>
+            <div id="history-container" class="space-y-3">
+                <!-- Historial injected -->
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Scripts -->
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+    <script src="script.js" defer></script>
+
+<script>
+/**
+ * Iframe 元素高亮注入脚本
+ * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
+ *
+ * 使用方法：
+ * 1. 将此脚本添加到目标网站的 HTML 中
+ * 2. 或通过浏览器扩展、用户脚本等方式注入
+ */
+
+(function () {
+  "use strict";
+
+  // 检查是否在 iframe 中
+  if (window.self === window.top) {
+    return; // 不在 iframe 中，不执行
+  }
+
+  // 检查是否已经初始化过
+  if (window.__iframeHighlightInitialized) {
+    return;
+  }
+  window.__iframeHighlightInitialized = true;
+  console.log("Iframe 高亮脚本已加载");
+
+  // 创建高亮覆盖层
+  var overlay = document.createElement("div");
+  overlay.id = "iframe-highlight-overlay";
+  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
+
+  // 创建悬停高亮框（虚线边框）
+  var highlightBox = document.createElement("div");
+  highlightBox.id = "iframe-highlight-box";
+  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
+
+  // 创建选中节点的常驻高亮框（实线边框）
+  var selectedBox = document.createElement("div");
+  selectedBox.id = "iframe-selected-box";
+  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
+
+  // 创建悬停标签显示
+  var tagLabel = document.createElement("div");
+  tagLabel.id = "iframe-tag-label";
+  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
+
+  // 创建选中节点标签
+  var selectedLabel = document.createElement("div");
+  selectedLabel.id = "iframe-selected-label";
+  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
+  overlay.appendChild(highlightBox);
+  overlay.appendChild(selectedBox);
+  overlay.appendChild(tagLabel);
+  overlay.appendChild(selectedLabel);
+  document.body.appendChild(overlay);
+
+  // 存储当前选中的元素
+  var selectedElement = null;
+  var highlightEnabled = false;
+
+  // 更新选中元素的高亮显示
+  function updateSelectedHighlight(element) {
+    console.log("updateSelectedHighlight called with:", element);
+    if (!element) {
+      selectedBox.style.display = "none";
+      selectedLabel.style.display = "none";
+      selectedElement = null;
+      console.log("Cleared selected highlight");
+      return;
+    }
+    selectedElement = element;
+    var rect = element.getBoundingClientRect();
+    console.log("Selected element rect:", rect);
+
+    // 更新选中高亮框位置
+    selectedBox.style.display = "block";
+    selectedBox.style.left = "".concat(rect.left - 2, "px");
+    selectedBox.style.top = "".concat(rect.top - 2, "px");
+    selectedBox.style.width = "".concat(rect.width + 4, "px");
+    selectedBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新选中标签位置和内容
+    selectedLabel.style.display = "block";
+    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 28;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 5) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
+    if (labelLeft + labelWidth > window.innerWidth - 10) {
+      labelLeft = window.innerWidth - labelWidth - 10;
+    }
+    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
+    selectedLabel.style.top = "".concat(labelTop, "px");
+    console.log("Selected highlight positioned at:", {
+      left: selectedBox.style.left,
+      top: selectedBox.style.top,
+      width: selectedBox.style.width,
+      height: selectedBox.style.height
+    });
+  }
+  function getElementSelector(element) {
+    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
+    var segments = [];
+    var current = element;
+    while (current !== document.documentElement) {
+      var selector = '';
+      // 优先检查唯一ID
+      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
+        segments.unshift("#".concat(current.id));
+        break; // ID唯一，无需继续向上
+      }
+
+      // 生成类名选择器（取第一个有效类名）
+      var classes = Array.from(current.classList).filter(function (c) {
+        return !c.startsWith('js-');
+      });
+      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
+
+      // 生成位置索引（nth-child）
+      var tag = current.tagName.toLowerCase();
+      if (!className) {
+        var siblings = Array.from(current.parentNode.children);
+        var index = siblings.findIndex(function (el) {
+          return el === current;
+        }) + 1;
+        selector = "".concat(tag, ":nth-child(").concat(index, ")");
+      } else {
+        selector = className;
+      }
+      segments.unshift(selector);
+      current = current.parentElement;
+    }
+
+    // 处理根元素
+    if (current === document.documentElement) {
+      segments.unshift('html');
+    }
+    return segments.join(' > ');
+  }
+
+  // 获取元素文本内容
+  function getElementText(element) {
+    var _element$textContent;
+    if (element.tagName === "INPUT") {
+      return element.value || element.placeholder || "";
+    }
+    if (element.tagName === "TEXTAREA") {
+      return element.value || element.placeholder || "";
+    }
+    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
+    return text.length > 50 ? text.substring(0, 50) + "..." : text;
+  }
+
+  // 获取元素属性信息
+  function getElementAttributes(element) {
+    var attrs = {};
+    for (var i = 0; i < element.attributes.length; i++) {
+      var attr = element.attributes[i];
+      attrs[attr.name] = attr.value;
+    }
+    return attrs;
+  }
+
+  // 鼠标悬停事件处理
+  function handleMouseOver(e) {
+    if (!highlightEnabled) return;
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免高亮 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 如果是已选中的元素，不显示悬停高亮
+    if (target === selectedElement) {
+      highlightBox.style.display = "none";
+      tagLabel.style.display = "none";
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+
+    // 更新悬停高亮框位置
+    highlightBox.style.display = "block";
+    highlightBox.style.left = "".concat(rect.left - 2, "px");
+    highlightBox.style.top = "".concat(rect.top - 2, "px");
+    highlightBox.style.width = "".concat(rect.width + 4, "px");
+    highlightBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新标签位置和内容
+    tagLabel.style.display = "block";
+    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 22;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 0) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
+      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
+    }
+    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
+    tagLabel.style.top = "".concat(labelTop, "px");
+
+    // 发送消息到父窗口
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 鼠标离开事件处理
+  function handleMouseOut(e) {
+    if (!highlightEnabled) return;
+    var relatedTarget = e.relatedTarget;
+
+    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
+    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
+      return;
+    }
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: null,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 点击事件处理
+  function handleClick(e) {
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免处理 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 检查是否是交互元素，这些元素需要保留默认行为
+    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
+
+    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
+    if (highlightEnabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+    console.log("Element clicked:", {
+      tagName: target.tagName,
+      selector: selector,
+      rect: rect
+    });
+
+    // 立即更新选中高亮
+    updateSelectedHighlight(target);
+
+    // 隐藏悬停高亮，因为现在是选中状态
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-click",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 监听来自父窗口的消息
+  function handleParentMessage(event) {
+    console.log("Received message from parent:", event.data);
+    if (event.data.type === "iframe-highlight-toggle") {
+      var enabled = event.data.enabled;
+      console.log("Highlight toggle:", enabled);
+      if (enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "enable-iframe-highlight") {
+      console.log("Enable iframe highlight");
+      enableHighlight();
+    } else if (event.data.type === "disable-iframe-highlight") {
+      console.log("Disable iframe highlight");
+      disableHighlight();
+    } else if (event.data.type === "toggle-iframe-highlight") {
+      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
+      console.log("Toggle iframe highlight to:", _enabled);
+      if (_enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "update-selected-element") {
+      var selector = event.data.selector;
+      console.log("Update selected element with selector:", selector);
+      if (selector) {
+        try {
+          var element = document.querySelector(selector);
+          console.log("Found element by selector:", element);
+          updateSelectedHighlight(element);
+        } catch (error) {
+          console.warn("Failed to select element:", error);
+          updateSelectedHighlight(null);
+        }
+      } else {
+        updateSelectedHighlight(null);
+      }
+    } else if (event.data.type === "clear-selected-element") {
+      console.log("Clear selected element");
+      updateSelectedHighlight(null);
+    }
+  }
+
+  // 启用高亮功能
+  function enableHighlight() {
+    console.log("Enabling highlight");
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
+    document.addEventListener("click", handleClick, true);
+    highlightEnabled = true;
+    overlay.style.display = "block";
+  }
+
+  // 禁用高亮功能
+  function disableHighlight() {
+    console.log("Disabling highlight");
+    highlightEnabled = false;
+    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
+    // 这样可以保留选中状态的显示
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
+  }
+
+  // 完全禁用高亮功能（移除所有监听器）
+  function fullyDisableHighlight() {
+    console.log("Fully disabling highlight");
+    highlightEnabled = false;
+    document.removeEventListener("mouseover", handleMouseOver, true);
+    document.removeEventListener("mouseout", handleMouseOut, true);
+    document.removeEventListener("click", handleClick, true);
+    overlay.style.display = "none";
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    selectedBox.style.display = "none";
+    selectedLabel.style.display = "none";
+  }
+
+  // 添加事件监听
+  enableHighlight();
+  window.addEventListener("message", handleParentMessage);
+
+  // 暴露全局函数供外部调用
+  window.__iframeHighlightControl = {
+    enable: enableHighlight,
+    disable: disableHighlight,
+    fullyDisable: fullyDisableHighlight,
+    isEnabled: function isEnabled() {
+      return highlightEnabled;
+    },
+    getSelectedElement: function getSelectedElement() {
+      return selectedElement;
+    },
+    updateSelected: updateSelectedHighlight,
+    // 通过消息发送开关控制
+    sendToggleMessage: function sendToggleMessage(enabled) {
+      window.parent.postMessage({
+        type: 'iframe-highlight-status',
+        enabled: enabled || highlightEnabled,
+        source: 'iframe-highlight-injector'
+      }, '*');
+    }
+  };
+
+  // 通知父窗口脚本已加载
+  try {
+    window.parent.postMessage({
+      type: "iframe-highlight-ready",
+      data: {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      },
+      source: "iframe-highlight-injector"
+    }, "*");
+  } catch (error) {
+    console.warn("无法发送就绪消息到父窗口:", error);
+  }
+
+  // 清理函数
+  window.__iframeHighlightCleanup = function () {
+    fullyDisableHighlight();
+    window.removeEventListener("message", handleParentMessage);
+    if (overlay.parentElement) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    delete window.__iframeHighlightInitialized;
+    delete window.__iframeHighlightCleanup;
+  };
+})();
+
+</script>
+
+<script>
+/**
+ * Iframe 元素高亮注入脚本
+ * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
+ *
+ * 使用方法：
+ * 1. 将此脚本添加到目标网站的 HTML 中
+ * 2. 或通过浏览器扩展、用户脚本等方式注入
+ */
+
+(function () {
+  "use strict";
+
+  // 检查是否在 iframe 中
+  if (window.self === window.top) {
+    return; // 不在 iframe 中，不执行
+  }
+
+  // 检查是否已经初始化过
+  if (window.__iframeHighlightInitialized) {
+    return;
+  }
+  window.__iframeHighlightInitialized = true;
+  console.log("Iframe 高亮脚本已加载");
+
+  // 创建高亮覆盖层
+  var overlay = document.createElement("div");
+  overlay.id = "iframe-highlight-overlay";
+  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
+
+  // 创建悬停高亮框（虚线边框）
+  var highlightBox = document.createElement("div");
+  highlightBox.id = "iframe-highlight-box";
+  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
+
+  // 创建选中节点的常驻高亮框（实线边框）
+  var selectedBox = document.createElement("div");
+  selectedBox.id = "iframe-selected-box";
+  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
+
+  // 创建悬停标签显示
+  var tagLabel = document.createElement("div");
+  tagLabel.id = "iframe-tag-label";
+  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
+
+  // 创建选中节点标签
+  var selectedLabel = document.createElement("div");
+  selectedLabel.id = "iframe-selected-label";
+  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
+  overlay.appendChild(highlightBox);
+  overlay.appendChild(selectedBox);
+  overlay.appendChild(tagLabel);
+  overlay.appendChild(selectedLabel);
+  document.body.appendChild(overlay);
+
+  // 存储当前选中的元素
+  var selectedElement = null;
+  var highlightEnabled = false;
+
+  // 更新选中元素的高亮显示
+  function updateSelectedHighlight(element) {
+    console.log("updateSelectedHighlight called with:", element);
+    if (!element) {
+      selectedBox.style.display = "none";
+      selectedLabel.style.display = "none";
+      selectedElement = null;
+      console.log("Cleared selected highlight");
+      return;
+    }
+    selectedElement = element;
+    var rect = element.getBoundingClientRect();
+    console.log("Selected element rect:", rect);
+
+    // 更新选中高亮框位置
+    selectedBox.style.display = "block";
+    selectedBox.style.left = "".concat(rect.left - 2, "px");
+    selectedBox.style.top = "".concat(rect.top - 2, "px");
+    selectedBox.style.width = "".concat(rect.width + 4, "px");
+    selectedBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新选中标签位置和内容
+    selectedLabel.style.display = "block";
+    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 28;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 5) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
+    if (labelLeft + labelWidth > window.innerWidth - 10) {
+      labelLeft = window.innerWidth - labelWidth - 10;
+    }
+    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
+    selectedLabel.style.top = "".concat(labelTop, "px");
+    console.log("Selected highlight positioned at:", {
+      left: selectedBox.style.left,
+      top: selectedBox.style.top,
+      width: selectedBox.style.width,
+      height: selectedBox.style.height
+    });
+  }
+  function getElementSelector(element) {
+    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
+    var segments = [];
+    var current = element;
+    while (current !== document.documentElement) {
+      var selector = '';
+      // 优先检查唯一ID
+      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
+        segments.unshift("#".concat(current.id));
+        break; // ID唯一，无需继续向上
+      }
+
+      // 生成类名选择器（取第一个有效类名）
+      var classes = Array.from(current.classList).filter(function (c) {
+        return !c.startsWith('js-');
+      });
+      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
+
+      // 生成位置索引（nth-child）
+      var tag = current.tagName.toLowerCase();
+      if (!className) {
+        var siblings = Array.from(current.parentNode.children);
+        var index = siblings.findIndex(function (el) {
+          return el === current;
+        }) + 1;
+        selector = "".concat(tag, ":nth-child(").concat(index, ")");
+      } else {
+        selector = className;
+      }
+      segments.unshift(selector);
+      current = current.parentElement;
+    }
+
+    // 处理根元素
+    if (current === document.documentElement) {
+      segments.unshift('html');
+    }
+    return segments.join(' > ');
+  }
+
+  // 获取元素文本内容
+  function getElementText(element) {
+    var _element$textContent;
+    if (element.tagName === "INPUT") {
+      return element.value || element.placeholder || "";
+    }
+    if (element.tagName === "TEXTAREA") {
+      return element.value || element.placeholder || "";
+    }
+    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
+    return text.length > 50 ? text.substring(0, 50) + "..." : text;
+  }
+
+  // 获取元素属性信息
+  function getElementAttributes(element) {
+    var attrs = {};
+    for (var i = 0; i < element.attributes.length; i++) {
+      var attr = element.attributes[i];
+      attrs[attr.name] = attr.value;
+    }
+    return attrs;
+  }
+
+  // 鼠标悬停事件处理
+  function handleMouseOver(e) {
+    if (!highlightEnabled) return;
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免高亮 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 如果是已选中的元素，不显示悬停高亮
+    if (target === selectedElement) {
+      highlightBox.style.display = "none";
+      tagLabel.style.display = "none";
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+
+    // 更新悬停高亮框位置
+    highlightBox.style.display = "block";
+    highlightBox.style.left = "".concat(rect.left - 2, "px");
+    highlightBox.style.top = "".concat(rect.top - 2, "px");
+    highlightBox.style.width = "".concat(rect.width + 4, "px");
+    highlightBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新标签位置和内容
+    tagLabel.style.display = "block";
+    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 22;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 0) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
+      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
+    }
+    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
+    tagLabel.style.top = "".concat(labelTop, "px");
+
+    // 发送消息到父窗口
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 鼠标离开事件处理
+  function handleMouseOut(e) {
+    if (!highlightEnabled) return;
+    var relatedTarget = e.relatedTarget;
+
+    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
+    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
+      return;
+    }
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: null,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 点击事件处理
+  function handleClick(e) {
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免处理 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 检查是否是交互元素，这些元素需要保留默认行为
+    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
+
+    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
+    if (highlightEnabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+    console.log("Element clicked:", {
+      tagName: target.tagName,
+      selector: selector,
+      rect: rect
+    });
+
+    // 立即更新选中高亮
+    updateSelectedHighlight(target);
+
+    // 隐藏悬停高亮，因为现在是选中状态
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-click",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 监听来自父窗口的消息
+  function handleParentMessage(event) {
+    console.log("Received message from parent:", event.data);
+    if (event.data.type === "iframe-highlight-toggle") {
+      var enabled = event.data.enabled;
+      console.log("Highlight toggle:", enabled);
+      if (enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "enable-iframe-highlight") {
+      console.log("Enable iframe highlight");
+      enableHighlight();
+    } else if (event.data.type === "disable-iframe-highlight") {
+      console.log("Disable iframe highlight");
+      disableHighlight();
+    } else if (event.data.type === "toggle-iframe-highlight") {
+      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
+      console.log("Toggle iframe highlight to:", _enabled);
+      if (_enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "update-selected-element") {
+      var selector = event.data.selector;
+      console.log("Update selected element with selector:", selector);
+      if (selector) {
+        try {
+          var element = document.querySelector(selector);
+          console.log("Found element by selector:", element);
+          updateSelectedHighlight(element);
+        } catch (error) {
+          console.warn("Failed to select element:", error);
+          updateSelectedHighlight(null);
+        }
+      } else {
+        updateSelectedHighlight(null);
+      }
+    } else if (event.data.type === "clear-selected-element") {
+      console.log("Clear selected element");
+      updateSelectedHighlight(null);
+    }
+  }
+
+  // 启用高亮功能
+  function enableHighlight() {
+    console.log("Enabling highlight");
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
+    document.addEventListener("click", handleClick, true);
+    highlightEnabled = true;
+    overlay.style.display = "block";
+  }
+
+  // 禁用高亮功能
+  function disableHighlight() {
+    console.log("Disabling highlight");
+    highlightEnabled = false;
+    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
+    // 这样可以保留选中状态的显示
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
+  }
+
+  // 完全禁用高亮功能（移除所有监听器）
+  function fullyDisableHighlight() {
+    console.log("Fully disabling highlight");
+    highlightEnabled = false;
+    document.removeEventListener("mouseover", handleMouseOver, true);
+    document.removeEventListener("mouseout", handleMouseOut, true);
+    document.removeEventListener("click", handleClick, true);
+    overlay.style.display = "none";
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    selectedBox.style.display = "none";
+    selectedLabel.style.display = "none";
+  }
+
+  // 添加事件监听
+  enableHighlight();
+  window.addEventListener("message", handleParentMessage);
+
+  // 暴露全局函数供外部调用
+  window.__iframeHighlightControl = {
+    enable: enableHighlight,
+    disable: disableHighlight,
+    fullyDisable: fullyDisableHighlight,
+    isEnabled: function isEnabled() {
+      return highlightEnabled;
+    },
+    getSelectedElement: function getSelectedElement() {
+      return selectedElement;
+    },
+    updateSelected: updateSelectedHighlight,
+    // 通过消息发送开关控制
+    sendToggleMessage: function sendToggleMessage(enabled) {
+      window.parent.postMessage({
+        type: 'iframe-highlight-status',
+        enabled: enabled || highlightEnabled,
+        source: 'iframe-highlight-injector'
+      }, '*');
+    }
+  };
+
+  // 通知父窗口脚本已加载
+  try {
+    window.parent.postMessage({
+      type: "iframe-highlight-ready",
+      data: {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      },
+      source: "iframe-highlight-injector"
+    }, "*");
+  } catch (error) {
+    console.warn("无法发送就绪消息到父窗口:", error);
+  }
+
+  // 清理函数
+  window.__iframeHighlightCleanup = function () {
+    fullyDisableHighlight();
+    window.removeEventListener("message", handleParentMessage);
+    if (overlay.parentElement) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    delete window.__iframeHighlightInitialized;
+    delete window.__iframeHighlightCleanup;
+  };
+})();
+
+</script>
 </body>
 </html>

@@ -1,113 +1,132 @@
-/* Tailwind maneja el 95% de los estilos. */
-
-/* SCROLLBAR */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-::-webkit-scrollbar-track {
-    background: transparent; 
-}
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1; 
-    border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8; 
-}
-
-.dark ::-webkit-scrollbar-thumb {
-    background: #374151;
-}
-.dark ::-webkit-scrollbar-thumb:hover {
-    background: #4b5563;
+:root {
+    /* Mantenemos las variables para compatibilidad con la lógica de tema oscuro del JS */
+    --primary: #E67E22; 
+    --primary-dark: #D35400;
+    --secondary: #4CA1A3; 
+    --secondary-dark: #3b8d8f;
+    --accent: #FFD93D;
+    --text: #1f2937; /* Gray 800 */
+    --text-light: #6b7280; /* Gray 500 */
+    --bg: #f3f4f6; /* Gray 100 */
+    --card-bg: #ffffff;
+    --input-bg: #f9fafb; /* Gray 50 */
+    --border: #e5e7eb; /* Gray 200 */
+    --whatsapp: #25D366; 
+    --offer: #EF4444; /* Red 500 */
+    --btn-bg: #f3f4f6;
+    --glass: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.5);
 }
 
-.hide-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-.hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* Filtros */
-.filter-btn {
-    padding: 0.6rem 1.2rem;
-    border-radius: 9999px; 
-    background-color: white;
-    color: #4b5563; 
-    border: 1px solid #e5e7eb; 
-    font-weight: 500;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    font-family: 'Outfit', sans-serif;
+[data-theme="dark"] {
+    --primary: #fb923c; /* Orange 400 */
+    --primary-dark: #f97316; /* Orange 500 */
+    --secondary: #2dd4bf; /* Teal 400 */
+    --secondary-dark: #14b8a6;
+    --text: #f9fafb; /* Gray 50 */
+    --text-light: #9ca3af; /* Gray 400 */
+    --bg: #111827; /* Gray 900 */
+    --card-bg: #1f2937; /* Gray 800 */
+    --input-bg: #374151; /* Gray 700 */
+    --border: #374151; /* Gray 700 */
+    --btn-bg: #374151;
+    --offer: #f87171; /* Red 400 */
+    --glass: rgba(17, 24, 39, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.1);
 }
 
-.dark .filter-btn {
-    background-color: #1F2937;
-    color: #9ca3af;
-    border-color: #374151;
+/* Configuraciones base */
+html { scroll-behavior: smooth; }
+body { 
+    background-color: var(--bg); 
+    color: var(--text); 
+    transition: background-color 0.3s ease, color 0.3s ease;
+    -webkit-font-smoothing: antialiased;
 }
 
-.filter-btn:hover {
-    background-color: #f3f4f6;
-    transform: translateY(-1px);
+/* Scrollbar personalizada */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #4b5563; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* Clases de utilidad personalizadas para animaciones */
+.glass-effect {
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--glass-border);
 }
 
-.dark .filter-btn:hover {
-    background-color: #374151;
-}
+.animate-fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
+.animate-slide-up { animation: slideUp 0.5s ease-out forwards; opacity: 0; transform: translateY(20px); }
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
 
-.filter-btn.active {
-    background-color: #F97316;
-    color: white;
-    border-color: #F97316;
-    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
-}
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 
-/* Flying Image Animation Class */
-.flying-img {
-    pointer-events: none; /* Crucial para que no bloquee clics mientras vuela */
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    object-fit: contain;
+/* Skeleton Loading mejorado */
+.skeleton {
+    background: linear-gradient(90deg, var(--input-bg) 25%, var(--border) 50%, var(--input-bg) 75%);
+    background-size: 200% 100%;
+    animation: shine 1.5s infinite;
 }
+@keyframes shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* Animations */
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-15px); }
-    100% { transform: translateY(0px); }
+/* Compatibilidad con clases viejas del JS para modales */
+.cart-modal {
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.animate-float {
-    animation: float 6s ease-in-out infinite;
-}
+.cart-modal.active { transform: translateX(0); }
 
-@keyframes pulse-slow {
-    0%, 100% { opacity: 0.3; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.05); }
-}
-.animate-pulse-slow {
-    animation: pulse-slow 4s ease-in-out infinite;
-}
-
-@keyframes fade-in-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in-up {
-    animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.cart-overlay {
     opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.cart-overlay.active { opacity: 1; pointer-events: auto; }
+
+/* Status Badge Animations */
+.status-badge .status-circle {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+    animation: pulse-green 2s infinite;
+}
+.status-badge.closed .status-circle {
+    box-shadow: none;
+    animation: none;
+}
+@keyframes pulse-green {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(37, 211, 102, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
 }
 
-@keyframes bounce-slow {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
+/* Ajustes específicos para inputs dentro de modales */
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.15);
 }
-.animate-bounce-slow {
-    animation: bounce-slow 3s infinite;
+
+/* Radio Cards Personalizadas */
+.radio-card input:checked + .radio-card-content {
+    border-color: var(--primary);
+    background-color: rgba(230, 126, 34, 0.05);
 }
+.radio-card input:checked + .radio-card-content .radio-circle {
+    border-color: var(--primary);
+    background-color: var(--primary);
+    box-shadow: inset 0 0 0 3px var(--card-bg);
+}
+
+/* Estilos de compatibilidad para elementos inyectados antiguos */
+.product-img { mix-blend-mode: multiply; }
+[data-theme="dark"] .product-img { mix-blend-mode: normal; }
+
+/* Ocultar scrollbar en contenedor de filtros pero permitir scroll */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
