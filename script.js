@@ -355,9 +355,15 @@ function processData(rows) {
 
         const weightRaw = row[3];
         const weight = (weightRaw && weightRaw.toString().trim() !== '') ? weightRaw : null;
-        let valColH = cleanPrice(row[7]);
-        let valColI = cleanPrice(row[8]);
-        let precioKg = 0; let precioBolsa = 0;
+        
+        // CORRECCIÓN AQUÍ: 
+        // Antes leíamos row[7] (COSTO) y row[8] (X KG)
+        // Según tu Excel: Col I (8) es X KG y Col J (9) es BOLSA
+        let valPrecioKg = cleanPrice(row[8]); // Columna I: X KG (Suelto/Barato)
+        let valPrecioBolsa = cleanPrice(row[9]); // Columna J: BOLSA (Caro/Cerrado)
+        
+        let precioKg = 0; 
+        let precioBolsa = 0;
 
         const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         const lowerName = normalize(nombreRaw);
@@ -367,16 +373,21 @@ function processData(rows) {
         else if (lowerName.match(/perro|dog|cachorro|adulto|raza|pedigree|dogui|canino|advance|nutricare|old prince|sieger|pipon|gooster|junior|mini|medium|maxi|mordida|sileoni/)) { category = 'perro'; catLabel = 'Perro'; }
         
         const isSpecial = lowerName.match(/piedra|arena|sanitaria|sobre|pouch|lata|humedo|golosina/);
+        
         if (category === 'otros') {
             if (isSpecial) {
                 category = 'otros'; catLabel = ''; 
-                precioBolsa = Math.max(valColH, valColI);
+                // Para productos especiales que solo tienen un precio, buscamos el valor más alto entre las dos columnas de venta
+                precioBolsa = Math.max(valPrecioKg, valPrecioBolsa);
                 precioKg = 0;
             } else {
-                precioBolsa = valColH; precioKg = valColI;    
+                precioBolsa = valPrecioBolsa; 
+                precioKg = valPrecioKg;    
             }
         } else {
-            precioKg = valColH; precioBolsa = valColI;
+            // Asignación directa y corregida para Perros y Gatos
+            precioKg = valPrecioKg;     // Columna I
+            precioBolsa = valPrecioBolsa; // Columna J
         }
 
         let imgUrl = row[10] && row[10].startsWith('http') ? row[10] : getImageForProduct(nombreRaw);
