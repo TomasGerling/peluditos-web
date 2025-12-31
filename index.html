@@ -1,236 +1,317 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="description" content="Peluditos Petshop en Necochea. Catálogo actualizado con los mejores precios.">
-    <meta name="theme-color" content="#FF8C42">
+    <meta name="theme-color" content="#F97316">
     
+    <title>Peluditos Petshop | Tu mascota feliz</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-
-    <title>Peluditos Petshop - Catálogo Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R43T32J1Z1"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-R43T32J1Z1');
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        heading: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#F97316', // Orange 500
+                        'primary-dark': '#C2410C', // Orange 700
+                        secondary: '#14B8A6', // Teal 500
+                        dark: '#111827',
+                        'dark-card': '#1F2937',
+                    }
+                }
+            }
+        }
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"></noscript>
-    
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans antialiased pb-24 md:pb-0">
 
-<header>
-    <a href="#" class="logo" onclick="location.reload()" aria-label="Recargar Peluditos">
-        <i class="fa-solid fa-paw"></i> Peluditos
-    </a>
-    
-    <div class="header-actions">
-        <div id="shop-status" class="status-badge closed">
-            <span class="status-circle"></span> <span id="status-text">Cerrado</span>
+    <nav class="fixed top-0 w-full z-50 transition-all duration-300" id="navbar">
+        <div class="absolute inset-0 bg-white/80 dark:bg-dark/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm"></div>
+        <div class="container mx-auto px-4 py-3 relative flex justify-between items-center">
+            <a href="#" class="flex items-center gap-2 group">
+                <div class="bg-primary/10 p-2 rounded-full group-hover:bg-primary/20 transition-colors">
+                    <i class="fa-solid fa-paw text-2xl text-primary transform group-hover:scale-110 transition-transform"></i>
+                </div>
+                <h1 class="font-heading font-semibold text-2xl text-gray-800 dark:text-white tracking-wide">
+                    Peluditos<span class="text-primary">.</span>
+                </h1>
+            </a>
+
+            <div class="flex items-center gap-3 md:gap-4">
+                <button id="theme-toggle" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all" aria-label="Cambiar tema">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block"></i>
+                </button>
+
+                <button onclick="openProfile()" class="w-10 h-10 rounded-full bg-secondary/10 text-secondary hover:bg-secondary hover:text-white transition-all flex items-center justify-center relative group" aria-label="Perfil">
+                    <i class="fa-solid fa-user"></i>
+                </button>
+
+                <button onclick="openCart()" class="relative bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-full font-medium transition-all shadow-lg shadow-primary/30 flex items-center gap-2 group">
+                    <i class="fa-solid fa-cart-shopping group-hover:animate-bounce"></i>
+                    <span class="hidden md:inline">Tu Pedido</span>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-dark font-bold">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <div class="absolute -top-20 -right-20 w-96 h-96 bg-primary/20 rounded-full blur-3xl opacity-50"></div>
+            <div class="absolute top-40 -left-20 w-72 h-72 bg-secondary/20 rounded-full blur-3xl opacity-50"></div>
         </div>
 
-        <button id="user-btn-display" class="user-btn" onclick="openLoginOrProfile()" aria-label="Ingresar o Ver Perfil">
-            <i class="fa-regular fa-user"></i> <span>Ingresar</span>
-        </button>
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                
+                <div class="w-full md:w-1/2 text-center md:text-left space-y-6">
+                    <div class="inline-block bg-orange-100 dark:bg-orange-900/30 text-primary px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide mb-2 animate-fade-in-up">
+                        🐾 Envíos en Necochea
+                    </div>
+                    <h2 class="font-heading text-4xl md:text-6xl font-bold leading-tight text-gray-900 dark:text-white animate-fade-in-up" style="animation-delay: 0.1s;">
+                        Lo mejor para tu <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-400">mejor amigo</span>
+                    </h2>
+                    <p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed max-w-lg mx-auto md:mx-0 animate-fade-in-up" style="animation-delay: 0.2s;">
+                        Alimentos de primera calidad, accesorios y todo lo que tu mascota necesita para ser feliz. Pide online y recibe en casa.
+                    </p>
+                    
+                    <div class="relative max-w-md mx-auto md:mx-0 group animate-fade-in-up" style="animation-delay: 0.3s;">
+                        <input type="text" id="search-input" placeholder="¿Qué estás buscando? (ej. Agility, Gato...)" 
+                            class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-dark-card border-2 border-gray-100 dark:border-gray-700 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none shadow-lg shadow-gray-200/50 dark:shadow-none transition-all placeholder-gray-400">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors text-lg"></i>
+                    </div>
+                </div>
 
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" aria-label="Cambiar modo oscuro/claro">
-            <i class="fa-solid fa-moon"></i>
-        </button>
-    </div>
-</header>
+                <div class="w-full md:w-1/2 flex justify-center relative animate-float">
+                   <div class="relative w-full max-w-md aspect-square">
+                       <div class="absolute inset-4 bg-gradient-to-tr from-primary to-orange-300 rounded-full opacity-20 dark:opacity-40 animate-pulse-slow"></div>
+                       <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=1000&auto=format&fit=crop" 
+                            alt="Perro feliz" 
+                            class="w-full h-full object-cover rounded-[3rem] shadow-2xl rotate-3 hover:rotate-0 transition-all duration-500 z-10 relative">
+                        
+                        <div class="absolute -bottom-6 -left-6 bg-white/90 dark:bg-dark-card/90 backdrop-blur-md p-4 rounded-2xl shadow-xl z-20 flex items-center gap-3 border border-white/50 dark:border-gray-700 animate-bounce-slow">
+                            <div class="bg-green-100 text-green-600 p-2 rounded-full">
+                                <i class="fa-solid fa-shield-dog text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">Calidad</p>
+                                <p class="font-bold text-gray-800 dark:text-white">Premium</p>
+                            </div>
+                        </div>
+                   </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-<main>
-    <section class="hero">
-        <h1>Lo mejor para tu mascota</h1>
-        <p>Alimento balanceado y accesorios en Necochea</p>
-        <div class="promo-pill">
-            <i class="fa-solid fa-gift"></i> Promo: 10kg acumulables = 1kg de regalo
+    <section class="container mx-auto px-4 mb-10 overflow-x-auto pb-4 hide-scrollbar">
+        <div class="flex md:justify-center gap-3 md:gap-4 min-w-max px-2" id="category-filters">
+            <button class="filter-btn active" data-category="all">
+                <i class="fa-solid fa-border-all"></i> Todo
+            </button>
+            <button class="filter-btn" data-category="perro">
+                <i class="fa-solid fa-dog"></i> Perros
+            </button>
+            <button class="filter-btn" data-category="gato">
+                <i class="fa-solid fa-cat"></i> Gatos
+            </button>
+            <button class="filter-btn" data-category="accesorios">
+                <i class="fa-solid fa-bone"></i> Accesorios
+            </button>
         </div>
     </section>
 
-    <div class="controls-wrapper">
-        <div class="search-container">
-            <div class="search-row">
-                <div class="search-box">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="searchInput" placeholder="Buscar marca, piedras..." onkeyup="applyFilters()" aria-label="Buscar producto por nombre o marca">
+    <main class="container mx-auto px-4 pb-20">
+        <div id="loading" class="text-center py-20 hidden">
+            <div class="inline-block animate-spin text-4xl text-primary mb-4"><i class="fa-solid fa-circle-notch"></i></div>
+            <p class="text-gray-500 font-medium">Cargando catálogo...</p>
+        </div>
+        
+        <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+            </div>
+
+        <div id="no-results" class="hidden text-center py-20">
+            <img src="https://cdn-icons-png.flaticon.com/512/7486/7486747.png" alt="No encontrado" class="w-32 mx-auto opacity-50 mb-4 grayscale">
+            <h3 class="text-xl font-heading font-semibold text-gray-600 dark:text-gray-300">No encontramos lo que buscas</h3>
+            <p class="text-gray-500">Intenta con otro término o categoría.</p>
+        </div>
+    </main>
+
+    <div id="cart-modal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onclick="closeAllModals()"></div>
+        <div class="absolute top-0 right-0 h-full w-full md:w-[450px] bg-white dark:bg-dark-card shadow-2xl transform transition-transform duration-300 translate-x-full flex flex-col" id="cart-content">
+            
+            <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-dark-card z-10">
+                <h3 class="font-heading font-semibold text-xl flex items-center gap-2">
+                    <i class="fa-solid fa-basket-shopping text-primary"></i> Tu Carrito
+                </h3>
+                <button onclick="closeAllModals()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-4">
                 </div>
-                <select id="priceSort" class="sort-select" onchange="applyFilters()" aria-label="Ordenar productos por precio">
-                    <option value="default">Relevancia</option>
-                    <option value="asc">Menor Precio</option>
-                    <option value="desc">Mayor Precio</option>
-                </select>
-            </div>
-            <nav class="filter-scroll">
-                <button class="filter-btn active" onclick="setCategory('all', this)" aria-label="Ver todos los productos">Todos</button>
-                <button class="filter-btn" onclick="setCategory('perro', this)" aria-label="Filtrar por perros"><i class="fa-solid fa-dog"></i> Perros</button>
-                <button class="filter-btn" onclick="setCategory('gato', this)" aria-label="Filtrar por gatos"><i class="fa-solid fa-cat"></i> Gatos</button>
-                <button class="filter-btn" onclick="setCategory('otros', this)" aria-label="Filtrar otros productos">Otros</button>
-            </nav>
-        </div>
-    </div>
 
-    <div id="loader" class="grid-container">
-        <div class="skeleton"></div><div class="skeleton"></div>
-    </div>
-
-    <div class="grid-container" id="product-grid" style="display:none;"></div>
-</main>
-
-<a href="#" id="supportBtn" class="support-float" aria-label="Contactar por WhatsApp" rel="noopener noreferrer" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
-<button class="cart-float" onclick="toggleCart()" aria-label="Ver Carrito de compras">
-    <i class="fa-solid fa-basket-shopping"></i>
-    <div class="cart-badge" id="cart-count">0</div>
-</button>
-
-<div class="cart-overlay" id="cart-overlay" onclick="closeAllModals()"></div>
-
-<div class="cart-modal" id="cart-modal">
-    <div class="cart-header">
-        <h3 id="cart-title" style="margin:0">Mi Pedido</h3>
-        <button onclick="closeAllModals()" class="close-btn" aria-label="Cerrar carrito">×</button>
-    </div>
-    <div class="cart-items" id="cart-items"></div>
-    <div class="cart-footer">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-weight:800; font-size:1.1rem;">
-            <span>Total:</span><span id="cart-total">$0</span>
-        </div>
-        <button class="btn-whatsapp" onclick="checkout()" aria-label="Iniciar proceso de pedido">Iniciar Pedido</button>
-    </div>
-</div>
-
-<div class="cart-modal" id="checkout-modal" style="z-index: 1002;">
-    <div class="cart-header">
-        <h3 style="margin:0"><i class="fa-solid fa-clipboard-check"></i> Finalizar Pedido</h3>
-        <button onclick="closeCheckout()" class="close-btn" aria-label="Cerrar checkout">×</button>
-    </div>
-    <div class="cart-items" style="padding: 20px;">
-        <div class="form-group">
-            <label class="form-label" for="cx-name"><i class="fa-regular fa-user"></i> Información del Cliente</label>
-            <div class="row">
-                <input type="text" id="cx-name" class="form-input" placeholder="Tu Nombre *" required aria-label="Tu Nombre">
-                <input type="tel" id="cx-phone" class="form-input" placeholder="Teléfono *" required aria-label="Tu Teléfono">
+            <div class="p-5 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 space-y-4">
+                <div class="flex justify-between items-end">
+                    <span class="text-gray-500 text-sm">Total a pagar</span>
+                    <span id="cart-total" class="text-2xl font-bold font-heading text-primary">$0</span>
+                </div>
+                <button onclick="checkout()" class="w-full py-3.5 bg-primary hover:bg-primary-dark text-white rounded-xl font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all flex justify-center items-center gap-2">
+                    Completar Pedido <i class="fa-solid fa-arrow-right"></i>
+                </button>
             </div>
         </div>
-        <div class="form-group">
-            <label class="form-label"><i class="fa-solid fa-truck-fast"></i> Tipo de Entrega</label>
-            <div class="radio-group">
-                <label class="radio-card">
-                    <input type="radio" name="deliveryType" value="retiro" checked onchange="toggleAddress(false)">
-                    <div class="radio-card-content">
-                        <div class="radio-circle"></div>
-                        <div><div style="font-weight:700">Retiro en Local</div><div style="font-size:0.8rem; color:var(--text-light)">Sin costo</div></div>
+    </div>
+
+    <div id="login-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeAllModals()"></div>
+        <div class="bg-white dark:bg-dark-card w-full max-w-md rounded-2xl shadow-2xl relative z-10 overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="login-content">
+            <div class="bg-primary p-6 text-center">
+                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-md">
+                    <i class="fa-solid fa-user text-2xl text-white"></i>
+                </div>
+                <h3 class="text-white font-heading text-2xl font-bold">Bienvenido</h3>
+                <p class="text-orange-100 text-sm">Ingresa tus datos para agilizar tus pedidos</p>
+            </div>
+            
+            <div class="p-8 space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="login-name" class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" placeholder="Tu nombre">
                     </div>
-                </label>
-                <label class="radio-card">
-                    <input type="radio" name="deliveryType" id="opt-delivery" value="delivery" onchange="toggleAddress(true)">
-                    <div class="radio-card-content">
-                        <div class="radio-circle"></div>
-                        <div><div style="font-weight:700">Delivery</div><div style="font-size:0.8rem; color:var(--text-light)" id="delivery-text">Envío a domicilio</div></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono (WhatsApp)</label>
+                    <div class="relative">
+                        <i class="fa-brands fa-whatsapp absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="tel" id="login-phone" class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" placeholder="Ej: 2262 123456">
                     </div>
-                </label>
+                </div>
+                <button onclick="saveUser()" class="w-full py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold shadow-lg shadow-primary/25 transition-all">
+                    Guardar Datos
+                </button>
             </div>
         </div>
-        <div id="address-section" class="hidden">
-            <div class="form-group">
-                <label class="form-label" for="cx-calle">Dirección de Entrega</label>
-                <input type="text" id="cx-calle" class="form-input" placeholder="Calle y Altura *" style="margin-bottom:10px" aria-label="Calle y altura">
-                <div class="row">
-                    <input type="text" id="cx-piso" class="form-input" placeholder="Piso/Depto" aria-label="Piso o departamento">
-                    <input type="text" id="cx-entre" class="form-input" placeholder="Entre calles" aria-label="Entre calles">
+    </div>
+
+    <div id="checkout-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeAllModals()"></div>
+        <div class="bg-white dark:bg-dark-card w-full max-w-lg rounded-2xl shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300" id="checkout-content">
+            
+            <div class="sticky top-0 bg-white dark:bg-dark-card p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center z-20">
+                <h3 class="font-heading font-bold text-xl">Finalizar Compra</h3>
+                <button onclick="closeAllModals()" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Método de Entrega</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="delivery" value="retiro" checked onchange="toggleDelivery(false)" class="peer sr-only">
+                            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 peer-checked:border-primary peer-checked:bg-primary/5 dark:peer-checked:bg-primary/10 transition-all text-center h-full hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <i class="fa-solid fa-store text-2xl mb-2 text-gray-400 peer-checked:text-primary"></i>
+                                <div class="font-semibold text-sm">Retiro en Local</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="delivery" value="envio" onchange="toggleDelivery(true)" class="peer sr-only">
+                            <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 peer-checked:border-primary peer-checked:bg-primary/5 dark:peer-checked:bg-primary/10 transition-all text-center h-full hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <i class="fa-solid fa-motorcycle text-2xl mb-2 text-gray-400 peer-checked:text-primary"></i>
+                                <div class="font-semibold text-sm">Envío a Domicilio</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="delivery-fields" class="hidden space-y-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 animate-fade-in">
+                    <div>
+                        <input type="text" id="cx-calle" placeholder="Dirección (Calle y Número)" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" id="cx-entre" placeholder="Entre calles" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none text-sm">
+                        <input type="text" id="cx-piso" placeholder="Piso/Depto (Opcional)" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Forma de Pago</label>
+                    <select id="cx-payment" class="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none appearance-none">
+                        <option value="efectivo">💵 Efectivo (Contra entrega)</option>
+                        <option value="transferencia">🏦 Transferencia Bancaria</option>
+                        <option value="debito">💳 Tarjeta Débito / MP</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Notas (Opcional)</label>
+                    <textarea id="cx-obs" rows="2" placeholder="¿Algo que debamos saber?" class="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none text-sm resize-none"></textarea>
                 </div>
             </div>
+
+            <div class="p-5 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <button onclick="sendOrder()" class="w-full py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all flex justify-center items-center gap-2 text-lg">
+                    <i class="fa-brands fa-whatsapp text-2xl"></i> Enviar Pedido
+                </button>
+                <p class="text-center text-xs text-gray-500 mt-3">Te redirigiremos a WhatsApp para confirmar.</p>
+            </div>
         </div>
-        <div class="form-group">
-            <label class="form-label"><i class="fa-regular fa-credit-card"></i> Forma de Pago</label>
-            <div class="radio-group">
-                <label class="radio-card">
-                    <input type="radio" name="paymentType" value="efectivo" checked>
-                    <div class="radio-card-content">
-                        <div class="radio-circle"></div>
-                        <div><div style="font-weight:700">Efectivo</div><div style="font-size:0.8rem; color:var(--text-light)">Al recibir</div></div>
+    </div>
+
+    <div id="profile-modal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onclick="closeAllModals()"></div>
+        <div class="absolute top-0 right-0 h-full w-full md:w-[400px] bg-white dark:bg-dark-card shadow-2xl transform transition-transform duration-300 translate-x-full flex flex-col" id="profile-content">
+            
+            <div class="h-32 bg-gradient-to-r from-primary to-orange-400 relative">
+                <button onclick="closeAllModals()" class="absolute top-4 right-4 text-white hover:rotate-90 transition-transform"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="px-6 -mt-12 mb-6">
+                <div class="w-24 h-24 bg-white dark:bg-dark-card rounded-full p-1 shadow-lg mx-auto md:mx-0">
+                    <div id="profile-initial" class="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-3xl font-bold text-primary">U</div>
+                </div>
+                <div class="mt-4 text-center md:text-left">
+                    <h3 id="profile-name" class="font-heading font-bold text-2xl">Usuario</h3>
+                    <p id="profile-phone" class="text-gray-500 dark:text-gray-400">...</p>
+                </div>
+                <div class="mt-4 flex justify-center md:justify-start">
+                    <button onclick="logout()" class="text-red-500 text-sm font-medium hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-6 pb-6">
+                <h4 class="font-heading font-semibold text-lg mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">Historial de Pedidos</h4>
+                <div id="history-container" class="space-y-4">
                     </div>
-                </label>
-                <label class="radio-card">
-                    <input type="radio" name="paymentType" value="transferencia">
-                    <div class="radio-card-content">
-                        <div class="radio-circle"></div>
-                        <div><div style="font-weight:700">Transf.</div><div style="font-size:0.8rem; color:var(--text-light)">Anticipado</div></div>
-                    </div>
-                </label>
             </div>
         </div>
-        <div class="form-group">
-            <label class="form-label" for="cx-obs"><i class="fa-regular fa-comment"></i> Observaciones</label>
-            <textarea id="cx-obs" class="form-input" rows="2" placeholder="Ej: Timbre no funciona..." aria-label="Observaciones adicionales"></textarea>
-        </div>
     </div>
-    <div class="cart-footer">
-        <button class="btn-whatsapp" onclick="sendOrder()" aria-label="Confirmar y enviar pedido por WhatsApp">
-            <i class="fa-brands fa-whatsapp"></i> Confirmar y Enviar
-        </button>
-    </div>
-</div>
 
-<div class="cart-modal" id="login-modal" style="z-index: 1003; height: auto; min-height: 50vh; bottom:0; top:auto; border-radius: 20px 20px 0 0;">
-    <div class="cart-header">
-        <h3 style="margin:0">Iniciar Sesión</h3>
-        <button onclick="closeAllModals()" class="close-btn" aria-label="Cerrar login">×</button>
-    </div>
-    <div class="cart-items login-content">
-        <p style="color:var(--text-light); margin-bottom:20px;">Ingresa tu número de teléfono para acceder a tu historial.</p>
-        <div id="step-phone">
-            <label class="form-label" style="text-align:left" for="login-phone">Número de teléfono</label>
-            <div class="phone-input-group">
-                <div class="prefix-box">AR +54</div>
-                <input type="tel" id="login-phone" class="phone-field" placeholder="Ej: 2262123456" onkeyup="checkEnter(event, 'checkPhone')" aria-label="Número de teléfono">
-            </div>
-            <button class="login-btn-primary" onclick="handleLoginCheck()" aria-label="Continuar">Continuar</button>
-        </div>
-        <div id="step-name" class="hidden">
-            <p style="color:var(--primary); font-weight:600;">¡Es tu primera vez aquí!</p>
-            <label class="form-label" style="text-align:left" for="login-name">¿Cómo te llamas?</label>
-            <input type="text" id="login-name" class="form-input" placeholder="Tu Nombre" style="margin-top:5px;" onkeyup="checkEnter(event, 'register')" aria-label="Tu nombre">
-            <button class="login-btn-primary" onclick="handleRegister()" aria-label="Crear cuenta">Crear Cuenta</button>
-        </div>
-    </div>
-</div>
-
-<div class="cart-modal" id="profile-modal" style="z-index: 1003;">
-    <div class="cart-header">
-        <h3 style="margin:0">Mi Perfil</h3>
-        <button onclick="closeAllModals()" class="close-btn" aria-label="Cerrar perfil">×</button>
-    </div>
-    <div class="cart-items">
-        <div style="background:var(--input-bg); padding:15px; border-radius:12px; display:flex; align-items:center; gap:15px; margin-bottom:20px;">
-            <div style="width:50px; height:50px; background:var(--primary); color:white; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold;" id="profile-initial">U</div>
-            <div>
-                <h3 id="profile-name" style="margin:0;">Usuario</h3>
-                <span id="profile-phone" style="color:var(--text-light); font-size:0.9rem;">...</span>
-            </div>
-            <button onclick="logout()" style="margin-left:auto; border:none; background:none; color:var(--offer); cursor:pointer;" aria-label="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
-        </div>
-        <h4 style="margin-bottom:15px;">Historial de Pedidos</h4>
-        <div id="history-container"></div>
-    </div>
-</div>
-
-<footer>
-    <p><strong>Peluditos Petshop</strong><br>Necochea, Buenos Aires</p>
-</footer>
-
-<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
-<script src="script.js" defer></script>
-
+    <script src="script.js"></script>
 </body>
 </html>
