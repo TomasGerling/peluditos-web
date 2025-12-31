@@ -4,9 +4,8 @@ const WHATSAPP_NUMBER = "5492262677026";
 let allProducts = [];
 let cart = [];
 let currentCategory = 'all';
-let currentUser = null; 
 
-// IMÁGENES POR DEFECTO Y ESPECÍFICAS
+// IMÁGENES ESPECÍFICAS
 const customImages = {
     "advance bio adulto r. pequena": "./img/advance-bio-adulto-r-pequena.webp",
     "advance bio adulto": "./img/advance-bio-adulto.webp",
@@ -20,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchProducts();
     initTheme();
     
-    // Botón Volver arriba
+    // Scroll para botón arriba
     window.onscroll = () => {
         const btn = document.getElementById('back-to-top');
         if (window.scrollY > 300) btn?.classList.remove('translate-y-20', 'opacity-0');
@@ -34,10 +33,19 @@ function fetchProducts() {
 
     Papa.parse(GOOGLE_SHEET_URL, {
         download: true,
-        header: false, // Leemos filas crudas para saltar el encabezado del Excel
+        header: false,
         complete: function(results) {
-            processSheetData(results.data);
-            loader?.classList.add('hidden');
+            try {
+                processSheetData(results.data);
+                loader?.classList.add('hidden');
+            } catch (error) {
+                console.error("Error procesando datos:", error);
+                if(loader) loader.innerHTML = "Error al procesar los productos.";
+            }
+        },
+        error: function(err) {
+            console.error("Error en PapaParse:", err);
+            if(loader) loader.innerHTML = "Error de conexión con Google.";
         }
     });
 }
@@ -46,35 +54,40 @@ function processSheetData(rows) {
     allProducts = [];
     let idCounter = 0;
 
-    // Empezamos desde la fila 5 (índice 5) para saltar encabezados de tu Excel
-    for (let i = 4; i < rows.length; i++) {
+    // Ajuste: Empezamos en la fila 4 (índice 3 del array)
+    // Cambiar a 3 si la fila 4 es la primera con datos, o a 4 si la fila 4 es encabezado.
+    for (let i = 3; i < rows.length; i++) {
         const row = rows[i];
+        if (!row || row.length < 3) continue;
+
         const nombreRaw = row[2]; // Columna C
-        if (!nombreRaw || nombreRaw.trim() === "" || nombreRaw.includes("DESCRIPCION")) continue;
+        if (!nombreRaw || nombreRaw.trim() === "" || nombreRaw.includes("---")) continue;
 
         const peso = row[3]; // Columna D
         const precioSuelto = parsePrice(row[7]); // Columna H
         const precioBolsa = parsePrice(row[8]);  // Columna I
         
-        const lowerName = nombreRaw.toLowerCase();
+        const lowerName = nombreRaw.toLowerCase().trim();
         
-        // Categorización
+        // Categorización simple
         let cat = 'otros';
-        if (lowerName.match(/gato|cat|felin/)) cat = 'gato';
-        else if (lowerName.match(/perro|dog|cachorro|adulto|canin/)) cat = 'perro';
-        else if (lowerName.match(/piedra|arena|collar|correa/)) cat = 'accesorios';
+        if (lowerName.match(/gato|cat|kitten|felin|7 vidas|gati|whiskas/)) cat = 'gato';
+        else if (lowerName.match(/perro|dog|cachorro|adulto|canin|junior|agility|advance|sieger|old prince/)) cat = 'perro';
+        else if (lowerName.match(/piedra|arena|collar|correa|juguete/)) cat = 'accesorios';
 
-        // Imagen: Primero busca en el mapeo exacto, luego por palabra clave
+        // Lógica de imagen mejorada para evitar conflictos
         let imgSrc = defaultImage;
-        const matchingKey = Object.keys(customImages).find(key => lowerName === key);
-        if (matchingKey) {
-            imgSrc = customImages[matchingKey];
+        
+        // 1. Prioridad: Coincidencia exacta de nombre
+        if (customImages[lowerName]) {
+            imgSrc = customImages[lowerName];
         } else {
+            // 2. Segunda opción: Buscar palabra clave
             const partialKey = Object.keys(customImages).find(key => lowerName.includes(key));
             if (partialKey) imgSrc = customImages[partialKey];
         }
 
-        // Crear item por KG si existe precio
+        // Crear producto Suelto
         if (precioSuelto > 0) {
             allProducts.push({
                 id: `s-${idCounter++}`,
@@ -86,7 +99,7 @@ function processSheetData(rows) {
             });
         }
 
-        // Crear item por BOLSA si existe precio
+        // Crear producto Bolsa/Unidad
         if (precioBolsa > 0) {
             allProducts.push({
                 id: `b-${idCounter++}`,
@@ -103,8 +116,15 @@ function processSheetData(rows) {
 
 function parsePrice(val) {
     if (!val) return 0;
-    // Limpia símbolos de moneda y puntos de miles, convierte coma en punto decimal
-    let clean = val.toString().replace(/\$/g, '').replace(/\./g, '').replace(',', '.').trim();
+    // Limpia todo excepto números, puntos y comas
+    let clean = val.toString().replace(/[^\d.,]/g, '');
+    // Si tiene puntos de miles (ej: 1.500,00), quitamos el punto y cambiamos la coma por punto
+    if (clean.includes('.') && clean.includes(',')) {
+        clean = clean.replace(/\./g, '').replace(',', '.');
+    } else {
+        // Si solo tiene coma, la cambiamos por punto
+        clean = clean.replace(',', '.');
+    }
     return parseFloat(clean) || 0;
 }
 
@@ -127,26 +147,37 @@ function renderProducts(searchTerm = '') {
     } else {
         noResults?.classList.add('hidden');
         filtered.forEach(p => {
-            grid.innerHTML += `
-                <div class="product-card group bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-md transition-all">
-                    <div class="relative h-48 bg-gray-50 flex items-center justify-center p-4">
-                        <img src="${p.image}" class="product-img max-h-full object-contain group-hover:scale-105 transition-transform">
-                        <span class="absolute top-2 left-2 bg-white/80 backdrop-blur px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-tighter">${p.type}</span>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-bold text-sm h-10 overflow-hidden line-clamp-2">${p.name}</h3>
-                        <p class="text-primary font-bold text-xl mt-2">$${p.price.toLocaleString('es-AR')}</p>
-                        <button onclick="addToCart('${p.id}', event)" class="w-full mt-3 bg-primary text-white py-2 rounded-xl text-sm font-bold hover:bg-primary-dark transition-colors">
-                            Agregar
-                        </button>
-                    </div>
+            const card = document.createElement('div');
+            card.className = "product-card group bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-md transition-all";
+            card.innerHTML = `
+                <div class="relative h-48 bg-gray-50 flex items-center justify-center p-4">
+                    <img src="${p.image}" class="product-img max-h-full object-contain group-hover:scale-105 transition-transform" onerror="this.src='${defaultImage}'">
+                    <span class="absolute top-2 left-2 bg-white/90 backdrop-blur px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-tighter shadow-sm text-gray-700">${p.type}</span>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-sm h-10 overflow-hidden line-clamp-2 text-gray-800 dark:text-gray-100">${p.name}</h3>
+                    <p class="text-primary font-bold text-xl mt-2">$${p.price.toLocaleString('es-AR')}</p>
+                    <button onclick="addToCart('${p.id}', event)" class="w-full mt-3 bg-primary text-white py-2.5 rounded-xl text-sm font-bold hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">
+                        Agregar
+                    </button>
                 </div>
             `;
+            grid.appendChild(card);
         });
     }
 }
 
-// Función Fly to Cart (Animación)
+// Lógica de Carrito y Animación
+function addToCart(id, event) {
+    flyToCart(event);
+    const product = allProducts.find(p => p.id === id);
+    const inCart = cart.find(item => item.id === id);
+    if (inCart) inCart.qty++;
+    else cart.push({...product, qty: 1});
+    
+    updateCartUI();
+}
+
 function flyToCart(e) {
     const cartBtn = document.getElementById('cart-btn');
     const card = e.target.closest('.product-card');
@@ -164,16 +195,17 @@ function flyToCart(e) {
             width: rect.width + 'px',
             height: rect.height + 'px',
             zIndex: 1000,
-            transition: 'all 0.8s ease-in-out',
-            pointerEvents: 'none'
+            transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+            pointerEvents: 'none',
+            borderRadius: '50%'
         });
 
         document.body.appendChild(clone);
 
         setTimeout(() => {
             Object.assign(clone.style, {
-                top: cartRect.top + 'px',
-                left: cartRect.left + 'px',
+                top: (cartRect.top + 10) + 'px',
+                left: (cartRect.left + 10) + 'px',
                 width: '20px',
                 height: '20px',
                 opacity: 0
@@ -182,16 +214,6 @@ function flyToCart(e) {
 
         setTimeout(() => clone.remove(), 850);
     }
-}
-
-function addToCart(id, event) {
-    flyToCart(event);
-    const product = allProducts.find(p => p.id === id);
-    const inCart = cart.find(item => item.id === id);
-    if (inCart) inCart.qty++;
-    else cart.push({...product, qty: 1});
-    
-    updateCartUI();
 }
 
 function updateCartUI() {
