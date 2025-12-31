@@ -6,7 +6,6 @@ let cart = [];
 let currentCategory = 'all';
 let currentUser = null; 
 
-// Mapeo de imágenes según palabras clave en el nombre
 const customImages = {
     "agility adulto raza pequena": "./img/agility-adulto-raza-pequena.webp",
     "agility cachorro": "./img/agility-cachorro.webp",
@@ -32,9 +31,8 @@ async function init() {
         const response = await fetch(GOOGLE_SHEET_URL);
         const csvText = await response.text();
         
-        // Usamos PapaParse para leer el CSV correctamente (ya incluido en tu HTML)
         Papa.parse(csvText, {
-            header: false, // No usamos header automático porque el Excel tiene filas arriba
+            header: false,
             skipEmptyLines: true,
             complete: function(results) {
                 processData(results.data);
@@ -50,49 +48,72 @@ async function init() {
 
 function processData(rows) {
     allProducts = [];
-    // Ordenamos claves de imagen por longitud para machear las más específicas primero
     const keywords = Object.keys(customImages).sort((a, b) => b.length - a.length);
 
-    // Empezamos en i = 3 porque tu Excel tiene 3 filas de encabezados (ALIAS, PERRO, Headers)
-    // Ajustar si es necesario, pero rows[3] debería ser el primer dato real.
-    for (let i = 0; i < rows.length; i++) {
-        const columns = rows[i];
-        
-        // Validación básica: necesitamos al menos columnas hasta el precio
-        if (columns.length < 8) continue;
+    // --- DETECCIÓN AUTOMÁTICA DE COLUMNAS ---
+    let headerIndex = -1;
+    let colName = -1;
+    let colPriceKg = -1;
+    let colPriceBolsa = -1;
 
-        // COLUMNA B (Indice 1) es la DESCRIPCION
-        const rawName = columns[1]; 
+    // Buscamos la fila que contiene los encabezados exactos de tu Excel
+    for (let i = 0; i < rows.length; i++) {
+        // Convertimos a mayúsculas y quitamos espacios para comparar seguro
+        const row = rows[i].map(cell => cell ? cell.toString().toUpperCase().trim() : "");
         
-        // Si no hay nombre, o es el encabezado "DESCRIPCION", saltamos
-        if (!rawName || rawName === "DESCRIPCION" || rawName.trim() === "") continue;
+        if (row.includes("DESCRIPCION") && (row.includes("BOLSA") || row.includes("X KG"))) {
+            headerIndex = i;
+            colName = row.indexOf("DESCRIPCION");
+            colPriceKg = row.indexOf("X KG"); // Buscamos columna 'X KG' para precio unitario
+            colPriceBolsa = row.indexOf("BOLSA"); // Buscamos columna 'BOLSA' para precio cerrado
+            break;
+        }
+    }
+
+    // Si no encuentra encabezados, usamos el fallback calculado (Indices desplazados +2)
+    if (headerIndex === -1) {
+        console.warn("No se encontraron encabezados, usando modo manual.");
+        headerIndex = 2; // Asumiendo datos empiezan tras fila 3
+        colName = 3;     // Columna B desplazada
+        colPriceKg = 9;  // Columna H ("X KG") desplazada
+        colPriceBolsa = 10; // Columna I ("BOLSA") desplazada
+    }
+
+    // Procesamos desde la fila siguiente al encabezado
+    for (let i = headerIndex + 1; i < rows.length; i++) {
+        const columns = rows[i];
+        if (!columns[colName]) continue;
+
+        const rawName = columns[colName];
+        if (!rawName || rawName.trim() === "" || rawName === "DESCRIPCION") continue;
 
         const name = rawName.trim();
 
-        // COLUMNA H (Indice 7) -> Precio X KG (Según tu foto)
-        // COLUMNA I (Indice 8) -> Precio BOLSA (Según tu foto)
-        // Limpiamos el string de signos $ o puntos de mil si vinieran mal formateados, aunque parseFloat suele manejarlos
-        // Nota: Si el excel usa coma decimal "1.200,50", JS necesita punto. 
-        // Asumimos formato estándar CSV numérico.
-        
-        let priceKg = parseFloat(columns[7]); 
-        let priceCerrada = parseFloat(columns[8]);
+        // Leemos precios usando los índices detectados
+        let valKg = columns[colPriceKg];
+        let valBolsa = columns[colPriceBolsa];
 
-        // Si ambos precios son inválidos, saltamos la fila (quizás es un subtítulo)
+        // Limpieza de moneda: quitamos '$', puntos de mil, y cambiamos coma decimal si hace falta
+        // Asumimos formato numérico estándar del CSV
+        let priceKg = typeof valKg === 'string' ? parseFloat(valKg.replace(/[$.]/g, '').replace(',', '.')) : parseFloat(valKg);
+        let priceCerrada = typeof valBolsa === 'string' ? parseFloat(valBolsa.replace(/[$.]/g, '').replace(',', '.')) : parseFloat(valBolsa);
+        
+        // Si el parseo falló (NaN) intentamos directo (a veces el CSV ya viene limpio)
+        if(isNaN(priceKg) && valKg) priceKg = parseFloat(valKg);
+        if(isNaN(priceCerrada) && valBolsa) priceCerrada = parseFloat(valBolsa);
+
         if ((isNaN(priceKg) || priceKg <= 0) && (isNaN(priceCerrada) || priceCerrada <= 0)) continue;
 
         const lowerName = name.toLowerCase();
         let category = 'otros';
         let catLabel = 'Varios';
 
-        // Lógica de categorías
         if (lowerName.match(/gato|cat|kitten|gati|whiskas|felino|7 vidas|fit 32|urinary/)) {
             category = 'gato'; catLabel = 'Gato';
         } else if (lowerName.match(/perro|dog|cachorro|adulto|raza|pedigree|dogui|canino|advance|nutricare|old prince|sieger|pipon|gooster|junior|mini|medium|maxi|mordida|sileoni/)) {
             category = 'perro'; catLabel = 'Perro';
         }
 
-        // Lógica de imágenes
         let img = "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=400";
         for (const key of keywords) {
             if (lowerName.includes(key)) {
@@ -110,10 +131,11 @@ function processData(rows) {
             prices: []
         };
 
-        // Agregamos precios solo si existen
+        // Asignación correcta: Columna "X KG" -> Etiqueta "Por KG"
         if (!isNaN(priceKg) && priceKg > 0) {
             product.prices.push({ type: 'Por KG', price: priceKg });
         }
+        // Asignación correcta: Columna "BOLSA" -> Etiqueta "Bolsa Cerrada"
         if (!isNaN(priceCerrada) && priceCerrada > 0) {
             product.prices.push({ type: 'Bolsa Cerrada', price: priceCerrada });
         }
@@ -121,7 +143,6 @@ function processData(rows) {
         allProducts.push(product);
     }
     
-    // UI: Ocultar loader y mostrar grid
     const loader = document.getElementById('loader');
     const grid = document.getElementById('product-grid');
     if(loader) loader.style.display = 'none';
@@ -226,7 +247,6 @@ function addToCart(pid, type, price) {
         cart.push({ cartKey, id: pid, name: product.name, type, price, qty: 1 }); 
     }
     
-    // Animación visual botón flotante
     const floatBtn = document.querySelector('.cart-float');
     if(floatBtn) {
         floatBtn.style.transform = "scale(1.1)";
@@ -257,7 +277,7 @@ function updateCartUI() {
             <div class="cart-item">
                 <div style="flex:1">
                     <div style="font-weight:700; margin-bottom:4px;">${item.name}</div>
-                    <div style="font-size:0.85rem; color:var(--text-light);">${item.type} x $${item.price}</div>
+                    <div style="font-size:0.85rem; color:var(--text-light);">${item.type} x $${item.price.toLocaleString('es-AR')}</div>
                 </div>
                 <div class="qty-control">
                     <button onclick="changeQty(${index}, -1)" class="qty-btn">-</button>
