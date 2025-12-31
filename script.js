@@ -6,6 +6,7 @@ let cart = [];
 let currentCategory = 'all';
 let currentUser = null; 
 
+// Mapeo de imágenes según palabras clave en el nombre
 const customImages = {
     "agility adulto raza pequena": "./img/agility-adulto-raza-pequena.webp",
     "agility cachorro": "./img/agility-cachorro.webp",
@@ -27,45 +28,71 @@ const customImages = {
 
 async function init() {
     loadUser(); 
-    // No llamamos a showSkeleton aquí porque el HTML ya tiene un loader visible por defecto
     try {
         const response = await fetch(GOOGLE_SHEET_URL);
-        const csvData = await response.text();
-        processData(csvData);
+        const csvText = await response.text();
+        
+        // Usamos PapaParse para leer el CSV correctamente (ya incluido en tu HTML)
+        Papa.parse(csvText, {
+            header: false, // No usamos header automático porque el Excel tiene filas arriba
+            skipEmptyLines: true,
+            complete: function(results) {
+                processData(results.data);
+            }
+        });
+
     } catch (error) {
         console.error("Error cargando Excel:", error);
-        document.getElementById('loader').innerHTML = "<p>Error al cargar productos.</p>";
+        const loader = document.getElementById('loader');
+        if(loader) loader.innerHTML = "<p>Error de conexión. Intenta recargar.</p>";
     }
 }
 
-function processData(csv) {
-    const lines = csv.split('\n');
+function processData(rows) {
     allProducts = [];
+    // Ordenamos claves de imagen por longitud para machear las más específicas primero
     const keywords = Object.keys(customImages).sort((a, b) => b.length - a.length);
 
-    for (let i = 1; i < lines.length; i++) {
-        const columns = lines[i].split(',');
+    // Empezamos en i = 3 porque tu Excel tiene 3 filas de encabezados (ALIAS, PERRO, Headers)
+    // Ajustar si es necesario, pero rows[3] debería ser el primer dato real.
+    for (let i = 0; i < rows.length; i++) {
+        const columns = rows[i];
+        
+        // Validación básica: necesitamos al menos columnas hasta el precio
         if (columns.length < 8) continue;
 
-        const name = columns[0] ? columns[0].trim() : "";
-        if (!name || name.toLowerCase().includes("producto")) continue;
-
-        const priceKg = parseFloat(columns[7]);
-        const priceCerrada = parseFloat(columns[8]);
+        // COLUMNA B (Indice 1) es la DESCRIPCION
+        const rawName = columns[1]; 
         
-        // Si no tiene precio, lo saltamos
+        // Si no hay nombre, o es el encabezado "DESCRIPCION", saltamos
+        if (!rawName || rawName === "DESCRIPCION" || rawName.trim() === "") continue;
+
+        const name = rawName.trim();
+
+        // COLUMNA H (Indice 7) -> Precio X KG (Según tu foto)
+        // COLUMNA I (Indice 8) -> Precio BOLSA (Según tu foto)
+        // Limpiamos el string de signos $ o puntos de mil si vinieran mal formateados, aunque parseFloat suele manejarlos
+        // Nota: Si el excel usa coma decimal "1.200,50", JS necesita punto. 
+        // Asumimos formato estándar CSV numérico.
+        
+        let priceKg = parseFloat(columns[7]); 
+        let priceCerrada = parseFloat(columns[8]);
+
+        // Si ambos precios son inválidos, saltamos la fila (quizás es un subtítulo)
         if ((isNaN(priceKg) || priceKg <= 0) && (isNaN(priceCerrada) || priceCerrada <= 0)) continue;
 
         const lowerName = name.toLowerCase();
         let category = 'otros';
         let catLabel = 'Varios';
 
+        // Lógica de categorías
         if (lowerName.match(/gato|cat|kitten|gati|whiskas|felino|7 vidas|fit 32|urinary/)) {
             category = 'gato'; catLabel = 'Gato';
         } else if (lowerName.match(/perro|dog|cachorro|adulto|raza|pedigree|dogui|canino|advance|nutricare|old prince|sieger|pipon|gooster|junior|mini|medium|maxi|mordida|sileoni/)) {
             category = 'perro'; catLabel = 'Perro';
         }
 
+        // Lógica de imágenes
         let img = "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=400";
         for (const key of keywords) {
             if (lowerName.includes(key)) {
@@ -83,21 +110,27 @@ function processData(csv) {
             prices: []
         };
 
-        if (!isNaN(priceKg) && priceKg > 0) product.prices.push({ type: 'Por KG', price: priceKg });
-        if (!isNaN(priceCerrada) && priceCerrada > 0) product.prices.push({ type: 'Bolsa Cerrada', price: priceCerrada });
+        // Agregamos precios solo si existen
+        if (!isNaN(priceKg) && priceKg > 0) {
+            product.prices.push({ type: 'Por KG', price: priceKg });
+        }
+        if (!isNaN(priceCerrada) && priceCerrada > 0) {
+            product.prices.push({ type: 'Bolsa Cerrada', price: priceCerrada });
+        }
 
         allProducts.push(product);
     }
     
-    // Ocultar loader y mostrar grid
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('product-grid').style.display = 'grid';
+    // UI: Ocultar loader y mostrar grid
+    const loader = document.getElementById('loader');
+    const grid = document.getElementById('product-grid');
+    if(loader) loader.style.display = 'none';
+    if(grid) grid.style.display = 'grid';
     
     renderProducts(allProducts);
 }
 
 function renderProducts(products) {
-    // CORRECCIÓN: ID coincide con HTML (product-grid)
     const grid = document.getElementById('product-grid');
     if(!grid) return;
     grid.innerHTML = "";
@@ -109,7 +142,7 @@ function renderProducts(products) {
 
     products.forEach(p => {
         const card = document.createElement('div');
-        card.className = 'card'; // Usamos la clase 'card' del CSS nuevo
+        card.className = 'card'; 
         
         let priceOptions = p.prices.map(pr => `
             <div class="price-option">
@@ -123,7 +156,6 @@ function renderProducts(products) {
             </div>
         `).join('');
 
-        // Estructura HTML ajustada a tu CSS (styles.css)
         card.innerHTML = `
             <div class="card-img-container">
                 <span class="offer-badge">${p.catLabel}</span>
@@ -142,7 +174,8 @@ function renderProducts(products) {
     });
 }
 
-// FUNCIONES DE INTERFAZ
+// --- FILTROS Y UI ---
+
 function toggleTheme() {
     const body = document.body;
     const current = body.getAttribute('data-theme');
@@ -151,23 +184,16 @@ function toggleTheme() {
     localStorage.setItem('theme', next);
 }
 
-// CORRECCIÓN: Renombrado a setCategory para coincidir con el onclick del HTML
 function setCategory(cat, btnElement) {
     currentCategory = cat;
-    
-    // Actualizar botones visualmente
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     if(btnElement) btnElement.classList.add('active');
-    
     applyFilters();
 }
 
 function applyFilters() {
-    // CORRECCIÓN: ID 'searchInput' coincide con HTML
     const input = document.getElementById('searchInput');
     const query = input ? input.value.toLowerCase() : "";
-    
-    // CORRECCIÓN: ID 'priceSort' coincide con HTML
     const sortVal = document.getElementById('priceSort').value;
 
     let filtered = allProducts.filter(p => {
@@ -178,8 +204,8 @@ function applyFilters() {
 
     if (sortVal !== 'default') {
         filtered.sort((a, b) => {
-            const priceA = a.prices[0].price;
-            const priceB = b.prices[0].price;
+            const priceA = a.prices[0] ? a.prices[0].price : 0;
+            const priceB = b.prices[0] ? b.prices[0].price : 0;
             return sortVal === 'asc' ? priceA - priceB : priceB - priceA;
         });
     }
@@ -187,7 +213,8 @@ function applyFilters() {
     renderProducts(filtered);
 }
 
-// CARRITO
+// --- CARRITO ---
+
 function addToCart(pid, type, price) {
     const product = allProducts.find(x => x.id === pid);
     const cartKey = `${pid}-${type}`;
@@ -199,34 +226,32 @@ function addToCart(pid, type, price) {
         cart.push({ cartKey, id: pid, name: product.name, type, price, qty: 1 }); 
     }
     
-    // Feedback visual simple
+    // Animación visual botón flotante
     const floatBtn = document.querySelector('.cart-float');
-    floatBtn.style.transform = "scale(1.1)";
-    setTimeout(() => floatBtn.style.transform = "scale(1)", 200);
+    if(floatBtn) {
+        floatBtn.style.transform = "scale(1.1)";
+        setTimeout(() => floatBtn.style.transform = "scale(1)", 200);
+    }
 
     updateCartUI();
 }
 
 function updateCartUI() {
     const count = cart.reduce((acc, i) => acc + i.qty, 0);
-    
-    // CORRECCIÓN: ID 'cart-count' coincide con HTML
     const countBadge = document.getElementById('cart-count');
     if(countBadge) countBadge.textContent = count;
     
-    // CORRECCIÓN: ID 'cart-items' coincide con HTML
     const container = document.getElementById('cart-items');
-    // CORRECCIÓN: ID 'cart-total' coincide con HTML
     const totalEl = document.getElementById('cart-total');
     
     if (cart.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-light);"><i class="fa-solid fa-basket-shopping" style="font-size:2rem; margin-bottom:10px;"></i><p>Tu carrito está vacío</p></div>';
+        if(container) container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-light);"><i class="fa-solid fa-basket-shopping" style="font-size:2rem; margin-bottom:10px;"></i><p>Tu carrito está vacío</p></div>';
         if(totalEl) totalEl.textContent = "$0";
         return;
     }
 
     let total = 0;
-    container.innerHTML = cart.map((item, index) => {
+    const itemsHtml = cart.map((item, index) => {
         total += item.price * item.qty;
         return `
             <div class="cart-item">
@@ -242,6 +267,7 @@ function updateCartUI() {
             </div>`;
     }).join('');
     
+    if(container) container.innerHTML = itemsHtml;
     if(totalEl) totalEl.textContent = `$${total.toLocaleString('es-AR')}`;
 }
 
@@ -264,16 +290,20 @@ function closeAllModals() {
     if(overlay) overlay.classList.remove('active');
 }
 
-// GESTIÓN DE USUARIO Y LOGIN
+// --- USUARIO ---
 
 function openLoginOrProfile() {
     if (currentUser) {
-        document.getElementById('profile-modal').classList.add('active');
-        document.getElementById('cart-overlay').classList.add('active');
+        const pModal = document.getElementById('profile-modal');
+        const overlay = document.getElementById('cart-overlay');
+        if(pModal) pModal.classList.add('active');
+        if(overlay) overlay.classList.add('active');
     } else {
-        document.getElementById('login-modal').classList.add('active');
-        document.getElementById('cart-overlay').classList.add('active');
-        // Reset steps
+        const lModal = document.getElementById('login-modal');
+        const overlay = document.getElementById('cart-overlay');
+        if(lModal) lModal.classList.add('active');
+        if(overlay) overlay.classList.add('active');
+        
         document.getElementById('step-phone').classList.remove('hidden');
         document.getElementById('step-name').classList.add('hidden');
         document.getElementById('login-phone').value = '';
@@ -296,11 +326,9 @@ function handleLoginCheck() {
         return;
     }
 
-    // Simulamos buscar usuario en localStorage (en un caso real sería una base de datos)
     const storedUsers = JSON.parse(localStorage.getItem('peluditos_users_db') || '{}');
     
     if (storedUsers[phone]) {
-        // Usuario existe
         currentUser = storedUsers[phone];
         localStorage.setItem('peluditos_user', JSON.stringify(currentUser));
         closeAllModals();
@@ -314,7 +342,6 @@ function handleLoginCheck() {
             timer: 3000
         });
     } else {
-        // Usuario nuevo, pedir nombre
         document.getElementById('step-phone').classList.add('hidden');
         document.getElementById('step-name').classList.remove('hidden');
         document.getElementById('login-name').focus();
@@ -331,13 +358,10 @@ function handleRegister() {
     }
 
     const newUser = { nombre: name, telefono: phone, history: [] };
-    
-    // Guardar en "DB" local
     const storedUsers = JSON.parse(localStorage.getItem('peluditos_users_db') || '{}');
     storedUsers[phone] = newUser;
     localStorage.setItem('peluditos_users_db', JSON.stringify(storedUsers));
 
-    // Loguear
     currentUser = newUser;
     localStorage.setItem('peluditos_user', JSON.stringify(currentUser));
     
@@ -367,11 +391,9 @@ function loadUser() {
 
 function updateUserUI() {
     if (currentUser && currentUser.nombre) {
-        // Actualizar botón del header
         const btnDisplay = document.querySelector('#user-btn-display span');
         if(btnDisplay) btnDisplay.textContent = currentUser.nombre.split(' ')[0];
         
-        // Actualizar modal de perfil
         const profileName = document.getElementById('profile-name');
         const profilePhone = document.getElementById('profile-phone');
         const profileInit = document.getElementById('profile-initial');
@@ -393,7 +415,7 @@ function logout() {
     location.reload();
 }
 
-// CHECKOUT Y ENVÍO
+// --- CHECKOUT ---
 
 function toggleAddress(show) {
     const addrSection = document.getElementById('address-section');
@@ -416,7 +438,6 @@ function checkout() {
     
     closeAllModals();
     
-    // Pre-llenar datos si el usuario está logueado
     if (currentUser) {
         document.getElementById('cx-name').value = currentUser.nombre;
         document.getElementById('cx-phone').value = currentUser.telefono;
@@ -428,12 +449,10 @@ function checkout() {
 
 function closeCheckout() {
     document.getElementById('checkout-modal').classList.remove('active');
-    // Si cerramos checkout, volvemos al carrito o cerramos todo? Cerramos todo.
     document.getElementById('cart-overlay').classList.remove('active');
 }
 
 function sendOrder() {
-    // Validar campos requeridos
     const name = document.getElementById('cx-name').value;
     const phone = document.getElementById('cx-phone').value;
     const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
@@ -453,7 +472,6 @@ function sendOrder() {
         }
     }
 
-    // Construir mensaje
     let msg = `*HOLA! NUEVO PEDIDO WEB* 🐾\n\n`;
     msg += `👤 *Cliente:* ${name}\n`;
     msg += `📱 *Tel:* ${phone}\n\n`;
@@ -480,7 +498,7 @@ function sendOrder() {
     
     if (obs) msg += `📝 *Nota:* ${obs}\n`;
 
-    // Guardar en historial local del usuario si existe
+    // Historial
     if (currentUser) {
         const storedUsers = JSON.parse(localStorage.getItem('peluditos_users_db') || '{}');
         if (storedUsers[currentUser.telefono]) {
@@ -496,7 +514,6 @@ function sendOrder() {
 
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     
-    // Limpiar carrito
     cart = [];
     updateCartUI();
     closeAllModals();
