@@ -1,17 +1,34 @@
-const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRbHFTGg7yD-wla-WTyuksMKmoPhblVtdrNAEf_BpQStuoAvVQZx2cwgigSYETo_A/pub?gid=1152455124&single=true&output=csv";
-const WHATSAPP_NUMBER = "5492262677026"; 
-const ENABLE_DELIVERY = false; 
+// ============================================
+// CONFIGURATION
+// ============================================
 
-// DATA VARIABLES
-let allProducts = [];
-let cart = [];
-let currentCategory = 'all';
+const CONFIG = {
+    GOOGLE_SHEET_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRbHFTGg7yD-wla-WTyuksMKmoPhblVtdrNAEf_BpQStuoAvVQZx2cwgigSYETo_A/pub?gid=1152455124&single=true&output=csv",
+    WHATSAPP_NUMBER: "5492262677026",
+    ENABLE_DELIVERY: false,
+    SHOP_HOURS: {
+        open: 9,
+        close: 20
+    }
+};
 
-// USUARIO LOCAL
-let currentUser = null; 
-let userHistory = []; 
+// ============================================
+// STATE
+// ============================================
 
-// IMAGENES
+const state = {
+    allProducts: [],
+    cart: [],
+    currentCategory: 'all',
+    currentUser: null,
+    userHistory: [],
+    isLoading: false
+};
+
+// ============================================
+// IMAGE MAPPINGS
+// ============================================
+
 const customImages = {
     "agility adulto raza pequena": "./img/agility-adulto-raza-pequena.webp",
     "agility cachorro": "./img/agility-cachorro.webp",
@@ -81,6 +98,7 @@ const customImages = {
     "whiskas pollo": "./img/whiskas-pollo.webp",
     "arroz saborizado": "./img/arroz-saborizado.webp",
 };
+
 const brandImages = {
     "royal": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Royal_Canin_logo.svg/300px-Royal_Canin_logo.svg.png",
     "pedigree": "https://1000marcas.net/wp-content/uploads/2021/06/Pedigree-Logo.png",
@@ -99,433 +117,1087 @@ const brandImages = {
     "dog chow": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2021-02/Dog%20Chow%20Logo.png.webp"
 };
 
-document.getElementById('supportBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hola Peluditos! Tengo una consulta...")}`;
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    initTheme();
-    updateShopStatus(); 
-    loadUserSession(); 
-    loadCart(); 
-    fetchData(); 
-});
-
-function updateShopStatus() {
-    const now = new Date();
-    const day = now.getDay(); 
-    const minutes = now.getHours() * 60 + now.getMinutes();
-
-    const morningStart = 9 * 60;        
-    const morningEnd = 13 * 60;         
-    const afternoonStart = 16 * 60 + 30; 
-    const afternoonEnd = 20 * 60 + 30;   
-
-    let isOpen = false;
-    let text = "Cerrado";
-
-    if (day >= 1 && day <= 6) {
-        if ((minutes >= morningStart && minutes < morningEnd) ||
-            (minutes >= afternoonStart && minutes < afternoonEnd)) {
-            isOpen = true;
-            text = "Abierto Ahora";
-        } else {
-            if (minutes < morningStart) text = "Abre 09:00hs";
-            else if (minutes >= morningEnd && minutes < afternoonStart) text = "Abre 16:30hs";
-            else text = "Cerrado";
-        }
-    } else {
-        text = "Cerrado (Domingo)";
-    }
-
-    const badge = document.getElementById('shop-status');
-    const badgeText = document.getElementById('status-text');
+const utils = {
+    normalize: (str) => {
+        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    },
     
-    badgeText.innerText = text;
-    if (isOpen) {
-        badge.classList.remove('closed');
-        badge.classList.add('open');
-    } else {
-        badge.classList.remove('open');
-        badge.classList.add('closed');
+    formatPrice: (n) => {
+        return n.toLocaleString('es-AR');
+    },
+    
+    escapeHtml: (text) => {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    },
+    
+    debounce: (func, wait) => {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    },
+    
+    isShopOpen: () => {
+        const now = new Date();
+        const day = now.getDay();
+        const hour = now.getHours();
+        
+        // Cerrado los domingos (0)
+        if (day === 0) return false;
+        
+        // Horario comercial
+        return hour >= CONFIG.SHOP_HOURS.open && hour < CONFIG.SHOP_HOURS.close;
+    },
+    
+    formatDate: (isoString) => {
+        const date = new Date(isoString);
+        return date.toLocaleDateString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     }
+};
+
+// ============================================
+// STORAGE MANAGER
+// ============================================
+
+const storage = {
+    get: (key) => {
+        try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : null;
+        } catch (error) {
+            console.error('Error reading from localStorage:', error);
+            return null;
+        }
+    },
+    
+    set: (key, value) => {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+            return true;
+        } catch (error) {
+            console.error('Error writing to localStorage:', error);
+            return false;
+        }
+    },
+    
+    remove: (key) => {
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (error) {
+            console.error('Error removing from localStorage:', error);
+            return false;
+        }
+    }
+};
+
+// ============================================
+// THEME MANAGER
+// ============================================
+
+const themeManager = {
+    init: () => {
+        const savedTheme = storage.get('peluditos_theme') || 'light';
+        themeManager.set(savedTheme);
+        themeManager.updateIcon();
+    },
+    
+    set: (theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        storage.set('peluditos_theme', theme);
+    },
+    
+    toggle: () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        themeManager.set(newTheme);
+        themeManager.updateIcon();
+    },
+    
+    updateIcon: () => {
+        const theme = document.documentElement.getAttribute('data-theme') || 'light';
+        const icon = document.querySelector('#themeBtn i');
+        if (icon) {
+            icon.className = theme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        }
+    }
+};
+
+// ============================================
+// SHOP STATUS
+// ============================================
+
+const shopStatus = {
+    update: () => {
+        const statusBadge = document.getElementById('shop-status');
+        const statusText = document.getElementById('status-text');
+        
+        if (!statusBadge || !statusText) return;
+        
+        const isOpen = utils.isShopOpen();
+        
+        statusBadge.classList.remove('open', 'closed');
+        statusBadge.classList.add(isOpen ? 'open' : 'closed');
+        statusText.textContent = isOpen ? 'Abierto' : 'Cerrado';
+    }
+};
+
+// ============================================
+// DATA LOADER
+// ============================================
+
+const dataLoader = {
+    fetch: async () => {
+        state.isLoading = true;
+        
+        try {
+            const response = await fetch(CONFIG.GOOGLE_SHEET_URL);
+            const csvText = await response.text();
+            
+            Papa.parse(csvText, {
+                header: true,
+                skipEmptyLines: true,
+                complete: (results) => {
+                    dataLoader.process(results.data);
+                },
+                error: (error) => {
+                    console.error('Error parsing CSV:', error);
+                    dataLoader.showError();
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            dataLoader.showError();
+        }
+    },
+    
+    process: (data) => {
+        state.allProducts = data.map((row, index) => {
+            const name = (row['nombre'] || '').trim();
+            const normalizedName = utils.normalize(name);
+            
+            const category = (row['categoria'] || 'otros').toLowerCase();
+            const precioKg = parseFloat(row['precio_kg']) || 0;
+            const precioBolsa = parseFloat(row['precio_bolsa']) || 0;
+            const weight = (row['peso'] || '').trim();
+            const isOffer = (row['oferta'] || '').toLowerCase() === 'si';
+            
+            let catLabel = '';
+            if (category === 'perro') catLabel = 'Perro';
+            else if (category === 'gato') catLabel = 'Gato';
+            
+            let imgUrl = customImages[normalizedName] || '';
+            if (!imgUrl) {
+                for (const brand in brandImages) {
+                    if (normalizedName.includes(brand)) {
+                        imgUrl = brandImages[brand];
+                        break;
+                    }
+                }
+            }
+            
+            return {
+                id: `product-${index}`,
+                nombre: name,
+                originalName: name,
+                category,
+                precioKg,
+                precioBolsa,
+                weight,
+                isOffer,
+                catLabel,
+                imgUrl
+            };
+        }).filter(p => p.nombre && (p.precioKg > 0 || p.precioBolsa > 0));
+        
+        state.isLoading = false;
+        productRenderer.render();
+        
+        // Hide loader
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('product-grid').style.display = 'grid';
+    },
+    
+    showError: () => {
+        const grid = document.getElementById('product-grid');
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                <i class="fa-solid fa-circle-exclamation" style="font-size: 3rem; color: var(--offer); margin-bottom: 20px;"></i>
+                <p style="color: var(--text); font-weight: 600; margin-bottom: 10px;">Error al cargar los productos</p>
+                <p style="color: var(--text-light); font-size: 0.9rem;">Por favor, intenta recargar la página</p>
+                <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    Recargar
+                </button>
+            </div>
+        `;
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('product-grid').style.display = 'grid';
+    }
+};
+
+// ============================================
+// PRODUCT RENDERER
+// ============================================
+
+const productRenderer = {
+    render: () => {
+        const grid = document.getElementById('product-grid');
+        if (!grid) return;
+        
+        const searchTerm = document.getElementById('searchInput')?.value || '';
+        const sortOrder = document.getElementById('priceSort')?.value || 'default';
+        
+        let filtered = state.allProducts.filter(p => {
+            const matchCat = state.currentCategory === 'all' || p.category === state.currentCategory;
+            const matchSearch = utils.normalize(p.originalName).includes(utils.normalize(searchTerm));
+            return matchCat && matchSearch;
+        });
+        
+        if (sortOrder !== 'default') {
+            filtered.sort((a, b) => {
+                const getMinPrice = (prod) => {
+                    const prices = [];
+                    if (prod.precioKg) prices.push(prod.precioKg);
+                    if (prod.precioBolsa) prices.push(prod.precioBolsa);
+                    return Math.min(...prices);
+                };
+                return sortOrder === 'asc' ? getMinPrice(a) - getMinPrice(b) : getMinPrice(b) - getMinPrice(a);
+            });
+        }
+        
+        if (filtered.length === 0) {
+            grid.innerHTML = `
+                <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-light);">
+                    <i class="fa-solid fa-magnifying-glass" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                    <p>No encontramos resultados 🐶🐱</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const fragment = document.createDocumentFragment();
+        
+        filtered.forEach((p, index) => {
+            const card = productRenderer.createCard(p, index);
+            fragment.appendChild(card);
+        });
+        
+        grid.innerHTML = '';
+        grid.appendChild(fragment);
+    },
+    
+    createCard: (product, index) => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.style.animationDelay = `${index * 0.05}s`;
+        
+        const badgeHtml = product.isOffer ? '<div class="offer-badge">OFERTA</div>' : '';
+        const catLabelHtml = product.catLabel ? `<span class="category-label">${product.catLabel}</span>` : '';
+        
+        let defaultIcon = 'fa-bag-shopping';
+        if (product.category === 'perro') defaultIcon = 'fa-dog';
+        if (product.category === 'gato') defaultIcon = 'fa-cat';
+        
+        const imgHtml = product.imgUrl ? 
+            `<img src="${product.imgUrl}" alt="${utils.escapeHtml(product.nombre)}" class="product-img" loading="lazy" width="200" height="200" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><i class="fa-solid fa-paw placeholder-icon" style="display:none"></i>` : 
+            `<i class="fa-solid ${defaultIcon} placeholder-icon"></i>`;
+        
+        let pricesHtml = '';
+        const jsSafeName = product.nombre.replace(/'/g, "\\'");
+        
+        if (product.precioKg) {
+            pricesHtml += `
+                <div class="price-option">
+                    <div class="price-info">
+                        <span class="price-label">x Kg Suelto</span>
+                        <span class="price-amount">$${utils.formatPrice(product.precioKg)}</span>
+                    </div>
+                    <button class="btn-add" onclick="cartManager.add('${jsSafeName}', 'Kg', ${product.precioKg})" aria-label="Agregar ${utils.escapeHtml(product.nombre)} suelto al carrito">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            `;
+        }
+        
+        if (product.precioBolsa) {
+            let labelBolsa = 'Unidad';
+            if (product.weight) {
+                const isNumber = !isNaN(parseFloat(product.weight)) && isFinite(product.weight);
+                if (!isNumber || product.category === 'otros') {
+                    labelBolsa = product.weight;
+                } else {
+                    labelBolsa = `Bolsa ${product.weight} Kg`;
+                }
+            }
+            
+            pricesHtml += `
+                <div class="price-option">
+                    <div class="price-info">
+                        <span class="price-label">${labelBolsa}</span>
+                        <span class="price-amount">$${utils.formatPrice(product.precioBolsa)}</span>
+                    </div>
+                    <button class="btn-add" onclick="cartManager.add('${jsSafeName}', '${labelBolsa}', ${product.precioBolsa})" aria-label="Agregar ${utils.escapeHtml(product.nombre)} ${labelBolsa} al carrito">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            `;
+        }
+        
+        card.innerHTML = `
+            <div class="card-img-container">
+                ${badgeHtml}
+                ${imgHtml}
+                ${catLabelHtml}
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column;">
+                <div class="card-header">
+                    <h2 class="card-title">${product.nombre}</h2>
+                </div>
+                <div class="card-body">
+                    ${pricesHtml}
+                </div>
+            </div>
+        `;
+        
+        return card;
+    }
+};
+
+// ============================================
+// CART MANAGER
+// ============================================
+
+const cartManager = {
+    load: () => {
+        const saved = storage.get('peluditos_cart');
+        if (saved) {
+            state.cart = saved;
+            cartManager.updateUI();
+        }
+    },
+    
+    save: () => {
+        storage.set('peluditos_cart', state.cart);
+    },
+    
+    add: (name, type, price) => {
+        const existing = state.cart.find(i => i.name === name && i.type === type);
+        
+        if (existing) {
+            existing.qty++;
+        } else {
+            state.cart.push({ name, type, price, qty: 1 });
+        }
+        
+        cartManager.save();
+        cartManager.updateUI();
+        
+        // Show toast notification
+        if (typeof Swal !== 'undefined') {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'bottom-end',
+                showConfirmButton: false,
+                timer: 1500,
+                background: 'var(--white)',
+                color: 'var(--text)',
+                timerProgressBar: true
+            });
+            Toast.fire({
+                icon: 'success',
+                title: 'Agregado al carrito'
+            });
+        }
+    },
+    
+    changeQty: (index, delta) => {
+        state.cart[index].qty += delta;
+        
+        if (state.cart[index].qty <= 0) {
+            state.cart.splice(index, 1);
+        }
+        
+        cartManager.save();
+        cartManager.updateUI();
+    },
+    
+    updateUI: () => {
+        const container = document.getElementById('cart-items');
+        const totalEl = document.getElementById('cart-total');
+        const countEl = document.getElementById('cart-count');
+        
+        if (!container || !totalEl || !countEl) return;
+        
+        container.innerHTML = '';
+        let total = 0;
+        let count = 0;
+        
+        if (state.cart.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; color:var(--text-light); margin-top:50px;">
+                    <i class="fa-solid fa-basket-shopping" style="font-size: 3rem; opacity: 0.3; margin-bottom: 15px;"></i>
+                    <p>Tu carrito está vacío 🦴</p>
+                </div>
+            `;
+        } else {
+            state.cart.forEach((item, index) => {
+                total += item.price * item.qty;
+                count += item.qty;
+                
+                const itemEl = document.createElement('div');
+                itemEl.className = 'cart-item';
+                itemEl.setAttribute('role', 'listitem');
+                itemEl.innerHTML = `
+                    <div style="flex-grow:1">
+                        <div style="font-weight:600; font-size:0.9rem; text-transform:capitalize;">
+                            ${item.name.toLowerCase()}
+                        </div>
+                        <div style="font-size:0.8rem; color:var(--text-light);">
+                            ${item.type} × $${utils.formatPrice(item.price)}
+                        </div>
+                    </div>
+                    <div class="qty-control">
+                        <button class="qty-btn" onclick="cartManager.changeQty(${index}, -1)" aria-label="Disminuir cantidad">
+                            −
+                        </button>
+                        <span>${item.qty}</span>
+                        <button class="qty-btn" onclick="cartManager.changeQty(${index}, 1)" aria-label="Aumentar cantidad">
+                            +
+                        </button>
+                    </div>
+                `;
+                container.appendChild(itemEl);
+            });
+        }
+        
+        totalEl.innerText = `$${utils.formatPrice(total)}`;
+        countEl.innerText = count;
+        countEl.style.display = count > 0 ? 'flex' : 'none';
+    },
+    
+    clear: () => {
+        state.cart = [];
+        cartManager.save();
+        cartManager.updateUI();
+    }
+};
+
+// ============================================
+// MODAL MANAGER
+// ============================================
+
+const modalManager = {
+    open: (modalId) => {
+        modalManager.closeAll();
+        const modal = document.getElementById(modalId);
+        const overlay = document.getElementById('cart-overlay');
+        
+        if (modal && overlay) {
+            modal.classList.add('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Focus management for accessibility
+            const firstFocusable = modal.querySelector('button, input, select, textarea');
+            if (firstFocusable) {
+                setTimeout(() => firstFocusable.focus(), 100);
+            }
+        }
+    },
+    
+    closeAll: () => {
+        document.querySelectorAll('.cart-modal').forEach(m => m.classList.remove('active'));
+        document.getElementById('cart-overlay')?.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+};
+
+// ============================================
+// USER MANAGER
+// ============================================
+
+const userManager = {
+    load: () => {
+        state.currentUser = storage.get('peluditos_user');
+        if (state.currentUser) {
+            userManager.updateUI();
+            userManager.loadHistory();
+        }
+    },
+    
+    save: (userData) => {
+        state.currentUser = userData;
+        storage.set('peluditos_user', userData);
+        userManager.updateUI();
+    },
+    
+    logout: () => {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: 'Tu carrito se mantendrá guardado',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cerrar',
+                cancelButtonText: 'Cancelar',
+                background: 'var(--white)',
+                color: 'var(--text)'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    state.currentUser = null;
+                    state.userHistory = [];
+                    storage.remove('peluditos_user');
+                    userManager.updateUI();
+                    modalManager.closeAll();
+                    
+                    Swal.fire({
+                        title: 'Sesión cerrada',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        background: 'var(--white)',
+                        color: 'var(--text)'
+                    });
+                }
+            });
+        }
+    },
+    
+    updateUI: () => {
+        const userBtn = document.getElementById('user-btn-display');
+        if (!userBtn) return;
+        
+        if (state.currentUser) {
+            const span = userBtn.querySelector('span');
+            if (span) {
+                span.textContent = state.currentUser.name.split(' ')[0];
+            }
+        } else {
+            const span = userBtn.querySelector('span');
+            if (span) {
+                span.textContent = 'Ingresar';
+            }
+        }
+    },
+    
+    loadHistory: () => {
+        if (!state.currentUser) return;
+        
+        const phone = state.currentUser.phone.replace(/\D/g, '');
+        const historyKey = `peluditos_history_${phone}`;
+        state.userHistory = storage.get(historyKey) || [];
+        
+        userManager.renderHistory();
+    },
+    
+    renderHistory: () => {
+        const container = document.getElementById('history-container');
+        if (!container) return;
+        
+        if (state.userHistory.length === 0) {
+            container.innerHTML = `
+                <p style="text-align:center; color:var(--text-light); padding:20px;">
+                    Aún no tienes pedidos
+                </p>
+            `;
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        // Show last 10 orders
+        state.userHistory.slice(-10).reverse().forEach((order, index) => {
+            const orderEl = document.createElement('div');
+            orderEl.className = 'history-card';
+            orderEl.setAttribute('role', 'listitem');
+            orderEl.style.animationDelay = `${index * 0.05}s`;
+            
+            const itemsList = order.items.map(i => 
+                `${i.qty}× ${i.name} (${i.type})`
+            ).join('<br>');
+            
+            orderEl.innerHTML = `
+                <div class="history-header">
+                    <span><i class="fa-regular fa-calendar"></i> ${utils.formatDate(order.date)}</span>
+                    <span>${order.items.reduce((sum, i) => sum + i.qty, 0)} productos</span>
+                </div>
+                <div class="history-items">${itemsList}</div>
+                <div class="history-footer">
+                    <span class="history-price">$${utils.formatPrice(order.total)}</span>
+                    <button class="btn-repeat" onclick="userManager.repeatOrder(${state.userHistory.length - 1 - index})">
+                        <i class="fa-solid fa-rotate-right"></i> Repetir
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(orderEl);
+        });
+    },
+    
+    repeatOrder: (index) => {
+        const realIndex = state.userHistory.length - 1 - index;
+        const order = state.userHistory[realIndex];
+        
+        if (!order) return;
+        
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: '¿Repetir pedido?',
+                text: 'Se agregará al carrito actual',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, agregar',
+                cancelButtonText: 'Cancelar',
+                background: 'var(--white)',
+                color: 'var(--text)'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    order.items.forEach(item => {
+                        const existing = state.cart.find(i => i.name === item.name && i.type === item.type);
+                        if (existing) {
+                            existing.qty += item.qty;
+                        } else {
+                            state.cart.push({ ...item });
+                        }
+                    });
+                    
+                    cartManager.save();
+                    cartManager.updateUI();
+                    modalManager.closeAll();
+                    
+                    Swal.fire({
+                        title: 'Pedido agregado',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        background: 'var(--white)',
+                        color: 'var(--text)'
+                    });
+                }
+            });
+        }
+    }
+};
+
+// ============================================
+// CHECKOUT MANAGER
+// ============================================
+
+const checkoutManager = {
+    init: () => {
+        if (state.cart.length === 0) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Carrito vacío',
+                    text: 'Agrega productos antes de hacer un pedido',
+                    icon: 'warning',
+                    background: 'var(--white)',
+                    color: 'var(--text)'
+                });
+            }
+            return;
+        }
+        
+        modalManager.closeAll();
+        
+        // Configure delivery option
+        const deliveryOpt = document.getElementById('opt-delivery');
+        const deliveryText = document.getElementById('delivery-text');
+        
+        if (deliveryOpt && deliveryText) {
+            if (!CONFIG.ENABLE_DELIVERY) {
+                deliveryOpt.disabled = true;
+                deliveryText.innerText = "(No disponible)";
+            } else {
+                deliveryOpt.disabled = false;
+                deliveryText.innerText = "Envío a domicilio";
+            }
+        }
+        
+        // Pre-fill user data
+        if (state.currentUser) {
+            const nameInput = document.getElementById('cx-name');
+            const phoneInput = document.getElementById('cx-phone');
+            
+            if (nameInput) nameInput.value = state.currentUser.name;
+            if (phoneInput) phoneInput.value = state.currentUser.phone;
+        }
+        
+        modalManager.open('checkout-modal');
+    },
+    
+    toggleAddress: (show) => {
+        const section = document.getElementById('address-section');
+        if (section) {
+            if (show) {
+                section.classList.remove('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+    },
+    
+    send: () => {
+        const name = document.getElementById('cx-name')?.value.trim();
+        const phone = document.getElementById('cx-phone')?.value.trim();
+        
+        if (!name || !phone) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Datos incompletos',
+                    text: 'Por favor completa tu nombre y teléfono',
+                    icon: 'error',
+                    background: 'var(--white)',
+                    color: 'var(--text)'
+                });
+            }
+            return;
+        }
+        
+        const deliveryType = document.querySelector('input[name="deliveryType"]:checked')?.value || 'retiro';
+        const paymentType = document.querySelector('input[name="paymentType"]:checked')?.value || 'efectivo';
+        const obs = document.getElementById('cx-obs')?.value.trim() || '';
+        
+        let addressText = "";
+        
+        if (deliveryType === 'delivery') {
+            const calle = document.getElementById('cx-calle')?.value.trim();
+            const extra = document.getElementById('cx-piso')?.value.trim();
+            const entre = document.getElementById('cx-entre')?.value.trim();
+            
+            if (!calle) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        text: 'Por favor indica la dirección de entrega',
+                        icon: 'warning',
+                        background: 'var(--white)',
+                        color: 'var(--text)'
+                    });
+                }
+                return;
+            }
+            
+            addressText = `📍 *Envío a:* ${calle}${extra ? ' (' + extra + ')' : ''}\n`;
+            if (entre) addressText += `   Entre: ${entre}\n`;
+        } else {
+            addressText = `🏪 *Retiro en Local*\n`;
+        }
+        
+        // Build WhatsApp message
+        let msg = `Hola Peluditos! 👋 Soy *${name}*.\n`;
+        msg += `📞 Tel: ${phone}\n\n`;
+        msg += `📋 *MI PEDIDO:*\n`;
+        
+        let total = 0;
+        state.cart.forEach(item => {
+            const subtotal = item.price * item.qty;
+            total += subtotal;
+            msg += `▪️ ${item.qty}× ${item.name} (${item.type}) = $${utils.formatPrice(subtotal)}\n`;
+        });
+        
+        msg += `\n💰 *TOTAL: $${utils.formatPrice(total)}*\n`;
+        msg += `------------------\n`;
+        msg += addressText;
+        msg += `💳 *Pago:* ${paymentType.toUpperCase()}\n`;
+        if (obs) msg += `📝 *Nota:* ${obs}\n`;
+        
+        // Save order to history
+        const orderRecord = {
+            date: new Date().toISOString(),
+            items: [...state.cart],
+            total: total
+        };
+        
+        const historyKey = `peluditos_history_${phone.replace(/\D/g, '')}`;
+        let currentHistory = storage.get(historyKey) || [];
+        currentHistory.push(orderRecord);
+        storage.set(historyKey, currentHistory);
+        
+        // Update current user history if logged in
+        if (state.currentUser && state.currentUser.phone === phone) {
+            state.userHistory = currentHistory;
+        }
+        
+        // Clear cart and open WhatsApp
+        cartManager.clear();
+        modalManager.closeAll();
+        
+        window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+};
+
+// ============================================
+// LOGIN MANAGER
+// ============================================
+
+const loginManager = {
+    openOrProfile: () => {
+        if (state.currentUser) {
+            // Show profile
+            const profileName = document.getElementById('profile-name');
+            const profilePhone = document.getElementById('profile-phone');
+            const profileInitial = document.getElementById('profile-initial');
+            
+            if (profileName) profileName.textContent = state.currentUser.name;
+            if (profilePhone) profilePhone.textContent = state.currentUser.phone;
+            if (profileInitial) {
+                profileInitial.textContent = state.currentUser.name.charAt(0).toUpperCase();
+            }
+            
+            userManager.loadHistory();
+            modalManager.open('profile-modal');
+        } else {
+            // Show login
+            modalManager.open('login-modal');
+        }
+    },
+    
+    check: () => {
+        const phone = document.getElementById('login-phone')?.value.trim();
+        
+        if (!phone) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    text: 'Ingresa tu número de teléfono',
+                    icon: 'warning',
+                    background: 'var(--white)',
+                    color: 'var(--text)'
+                });
+            }
+            return;
+        }
+        
+        const historyKey = `peluditos_history_${phone.replace(/\D/g, '')}`;
+        const history = storage.get(historyKey);
+        
+        if (history && history.length > 0) {
+            // User exists - get name from first order or ask
+            const savedUser = storage.get('peluditos_user');
+            if (savedUser && savedUser.phone === phone) {
+                userManager.save(savedUser);
+                modalManager.closeAll();
+                
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: `¡Bienvenido ${savedUser.name}!`,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        background: 'var(--white)',
+                        color: 'var(--text)'
+                    });
+                }
+            } else {
+                // Show name input for returning user
+                document.getElementById('step-phone')?.classList.add('hidden');
+                document.getElementById('step-name')?.classList.remove('hidden');
+            }
+        } else {
+            // New user
+            document.getElementById('step-phone')?.classList.add('hidden');
+            document.getElementById('step-name')?.classList.remove('hidden');
+        }
+    },
+    
+    register: () => {
+        const phone = document.getElementById('login-phone')?.value.trim();
+        const name = document.getElementById('login-name')?.value.trim();
+        
+        if (!name) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    text: 'Por favor ingresa tu nombre',
+                    icon: 'warning',
+                    background: 'var(--white)',
+                    color: 'var(--text)'
+                });
+            }
+            return;
+        }
+        
+        const userData = { name, phone };
+        userManager.save(userData);
+        
+        // Reset login form
+        document.getElementById('step-phone')?.classList.remove('hidden');
+        document.getElementById('step-name')?.classList.add('hidden');
+        document.getElementById('login-phone').value = '';
+        document.getElementById('login-name').value = '';
+        
+        modalManager.closeAll();
+        
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: `¡Bienvenido ${name}!`,
+                text: 'Tu cuenta ha sido creada',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false,
+                background: 'var(--white)',
+                color: 'var(--text)'
+            });
+        }
+    }
+};
+
+// ============================================
+// FILTER MANAGER
+// ============================================
+
+const filterManager = {
+    setCategory: (category, buttonElement) => {
+        state.currentCategory = category;
+        
+        // Update active button
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        if (buttonElement) {
+            buttonElement.classList.add('active');
+        }
+        
+        productRenderer.render();
+    }
+};
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+
+const setupEventListeners = () => {
+    // Escape key to close modals
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            modalManager.closeAll();
+        }
+    });
+    
+    // Debounced search
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', utils.debounce(() => {
+            productRenderer.render();
+        }, 300));
+    }
+};
+
+// ============================================
+// GLOBAL FUNCTIONS (for onclick handlers)
+// ============================================
+
+function toggleTheme() {
+    themeManager.toggle();
 }
 
-function loadUserSession() {
-    const storedUser = localStorage.getItem('peluditos_user');
-    if (storedUser) {
-        currentUser = JSON.parse(storedUser);
-        updateUserUI(true);
-        const storedHistory = localStorage.getItem('peluditos_history_' + currentUser.phone);
-        userHistory = storedHistory ? JSON.parse(storedHistory) : [];
-    } else {
-        updateUserUI(false);
-    }
+function setCategory(category, buttonElement) {
+    filterManager.setCategory(category, buttonElement);
 }
 
-function updateUserUI(isLoggedIn) {
-    const btn = document.getElementById('user-btn-display');
-    if (isLoggedIn) {
-        btn.innerHTML = `<i class="fa-solid fa-user"></i> <span>${currentUser.name.split(' ')[0]}</span>`;
-        document.getElementById('profile-name').innerText = currentUser.name;
-        document.getElementById('profile-phone').innerText = "+54 " + currentUser.phone;
-        document.getElementById('profile-initial').innerText = currentUser.name.charAt(0).toUpperCase();
-    } else {
-        btn.innerHTML = `<i class="fa-regular fa-user"></i> <span>Ingresar</span>`;
-    }
+function applyFilters() {
+    productRenderer.render();
+}
+
+function toggleCart() {
+    modalManager.open('cart-modal');
+}
+
+function closeAllModals() {
+    modalManager.closeAll();
+}
+
+function checkout() {
+    checkoutManager.init();
+}
+
+function closeCheckout() {
+    modalManager.closeAll();
+    modalManager.open('cart-modal');
+}
+
+function toggleAddress(show) {
+    checkoutManager.toggleAddress(show);
+}
+
+function sendOrder() {
+    checkoutManager.send();
 }
 
 function openLoginOrProfile() {
-    closeAllModals();
-    if (currentUser) {
-        renderHistory();
-        document.getElementById('profile-modal').classList.add('active');
-        document.getElementById('cart-overlay').classList.add('active');
-    } else {
-        document.getElementById('step-phone').classList.remove('hidden');
-        document.getElementById('step-name').classList.add('hidden');
-        document.getElementById('login-phone').value = '';
-        document.getElementById('login-modal').classList.add('active');
-        document.getElementById('cart-overlay').classList.add('active');
-        setTimeout(() => document.getElementById('login-phone').focus(), 300);
-    }
+    loginManager.openOrProfile();
 }
 
 function handleLoginCheck() {
-    const phoneInput = document.getElementById('login-phone').value.trim();
-    if (phoneInput.length < 8) {
-        Swal.fire({ text: 'Ingresa un número válido', icon: 'warning', toast:true, position:'top', timer:2000, showConfirmButton:false });
-        return;
-    }
-    let usersDB = JSON.parse(localStorage.getItem('peluditos_users_db')) || {};
-    if (usersDB[phoneInput]) {
-        currentUser = usersDB[phoneInput];
-        localStorage.setItem('peluditos_user', JSON.stringify(currentUser));
-        finishLogin();
-    } else {
-        document.getElementById('step-phone').classList.add('hidden');
-        document.getElementById('step-name').classList.remove('hidden');
-        setTimeout(() => document.getElementById('login-name').focus(), 300);
-    }
+    loginManager.check();
 }
 
 function handleRegister() {
-    const phone = document.getElementById('login-phone').value.trim();
-    const name = document.getElementById('login-name').value.trim();
-    if (name.length < 2) {
-        Swal.fire({ text: 'Escribe tu nombre', icon: 'warning', toast:true, position:'top' });
-        return;
-    }
-    const newUser = { phone, name, joined: new Date().toISOString() };
-    let usersDB = JSON.parse(localStorage.getItem('peluditos_users_db')) || {};
-    usersDB[phone] = newUser;
-    localStorage.setItem('peluditos_users_db', JSON.stringify(usersDB));
-    currentUser = newUser;
-    localStorage.setItem('peluditos_user', JSON.stringify(currentUser));
-    finishLogin();
-}
-
-function finishLogin() {
-    loadUserSession();
-    closeAllModals();
-    Swal.fire({ icon: 'success', title: `¡Hola ${currentUser.name}!`, toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+    loginManager.register();
 }
 
 function logout() {
-    localStorage.removeItem('peluditos_user');
-    currentUser = null;
-    userHistory = [];
-    updateUserUI(false);
-    closeAllModals();
-    Swal.fire({ text: 'Sesión cerrada', icon: 'info', toast:true, position:'top-end', timer:1500, showConfirmButton:false });
+    userManager.logout();
 }
 
-function checkEnter(e, action) {
-    if (e.key === "Enter") {
+function checkEnter(event, action) {
+    if (event.key === 'Enter') {
         if (action === 'checkPhone') handleLoginCheck();
         if (action === 'register') handleRegister();
     }
 }
 
-function renderHistory() {
-    const container = document.getElementById('history-container');
-    if (!userHistory || userHistory.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:var(--text-light); padding:20px;">Aún no tienes pedidos guardados.</p>';
-        return;
-    }
-    let html = '';
-    [...userHistory].reverse().forEach((order, idx) => {
-        const date = new Date(order.date).toLocaleDateString('es-AR');
-        const itemsSummary = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
-        const realIdx = userHistory.length - 1 - idx;
-        html += `
-        <div class="history-card">
-            <div class="history-header"><span>Pedido #${1000 + realIdx}</span><span>${date}</span></div>
-            <div class="history-items">${itemsSummary}</div>
-            <div class="history-footer">
-                <span class="history-price">$${order.total.toLocaleString('es-AR')}</span>
-                <button class="btn-repeat" onclick="repeatOrder(${realIdx})" aria-label="Repetir pedido"><i class="fa-solid fa-rotate-right"></i> Repetir</button>
-            </div>
-        </div>`;
-    });
-    container.innerHTML = html;
-}
+// ============================================
+// INITIALIZATION
+// ============================================
 
-function repeatOrder(idx) {
-    const order = userHistory[idx];
-    if (!order) return;
-    order.items.forEach(item => {
-        const existing = cart.find(c => c.name === item.name && c.type === item.type);
-        if (existing) { existing.qty += item.qty; } else { cart.push({ ...item }); }
-    });
-    saveCart(); updateCartUI(); closeAllModals(); toggleCart(); 
-    Swal.fire({ title: 'Productos agregados', icon: 'success', toast: true, position: 'bottom-end', timer: 1500, showConfirmButton: false });
-}
-
-// --- CORE FUNCTIONS ---
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        updateThemeIcon('dark');
-    }
-}
-
-function toggleTheme() {
-    const html = document.documentElement;
-    const current = html.getAttribute('data-theme');
-    const target = current === 'dark' ? 'light' : 'dark';
-    if (target === 'dark') html.setAttribute('data-theme', 'dark');
-    else html.removeAttribute('data-theme');
-    localStorage.setItem('theme', target);
-    updateThemeIcon(target);
-}
-
-function updateThemeIcon(theme) {
-    const icon = document.querySelector('#themeBtn i');
-    if (theme === 'dark') { icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); } 
-    else { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); }
-}
-
-function fetchData() {
-    Papa.parse(GOOGLE_SHEET_URL, {
-        download: true, header: false,
-        complete: function(results) {
-            processData(results.data);
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('product-grid').style.display = 'grid';
-        },
-        error: function() { document.getElementById('loader').innerHTML = `<div class="error-msg">Error cargando precios.</div>`; }
-    });
-}
-
-function roundToCustomRule(value) {
-    if (!value) return 0;
-    let integerVal = Math.round(value); 
-    let remainder = integerVal % 100;
-    return remainder <= 50 ? integerVal - remainder : integerVal + (100 - remainder);
-}
-
-function getImageForProduct(name) {
-    const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    const lowerName = normalize(name);
-    const customKeys = Object.keys(customImages).sort((a, b) => b.length - a.length);
-    for (const key of customKeys) { if (lowerName.includes(key)) return customImages[key]; }
-    for (const [brand, url] of Object.entries(brandImages)) { if (lowerName.includes(brand.toLowerCase())) return url; }
-    return null;
-}
-
-function cleanProductName(name) {
-    if (!name) return "";
-    let clean = name.replace(/['"]/g, ''); 
-    clean = clean.replace(/\b(perro|gato|perros|gatos)\b/gi, '').replace(/\s+/g, ' ').trim();
-    return clean;
-}
-
-function processData(rows) {
-    allProducts = [];
-    const cleanPrice = (val) => {
-        if (!val) return 0;
-        let cleaned = val.toString().replace(/[$.]/g, '').replace(',', '.').replace(/[^\d.]/g, '');
-        return roundToCustomRule(parseFloat(cleaned) || 0);
-    };
-
-    for (let i = 3; i < rows.length; i++) {
-        const row = rows[i];
-        let nombreRaw = row[2];
-        if (!nombreRaw || nombreRaw.includes("DESCRIPCION")) continue;
-
-        const weightRaw = row[3];
-        const weight = (weightRaw && weightRaw.toString().trim() !== '') ? weightRaw : null;
-        
-        // CORRECCIÓN AQUÍ: 
-        // Antes leíamos row[7] (COSTO) y row[8] (X KG)
-        // Según tu Excel: Col I (8) es X KG y Col J (9) es BOLSA
-        let valPrecioKg = cleanPrice(row[8]); // Columna I: X KG (Suelto/Barato)
-        let valPrecioBolsa = cleanPrice(row[9]); // Columna J: BOLSA (Caro/Cerrado)
-        
-        let precioKg = 0; 
-        let precioBolsa = 0;
-
-        const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-        const lowerName = normalize(nombreRaw);
-        
-        let category = 'otros'; let catLabel = ''; 
-        if (lowerName.match(/gato|cat|kitten|gati|whiskas|felino|7 vidas|fit 32|urinary/)) { category = 'gato'; catLabel = 'Gato'; }
-        else if (lowerName.match(/perro|dog|cachorro|adulto|raza|pedigree|dogui|canino|advance|nutricare|old prince|sieger|pipon|gooster|junior|mini|medium|maxi|mordida|sileoni/)) { category = 'perro'; catLabel = 'Perro'; }
-        
-        const isSpecial = lowerName.match(/piedra|arena|sanitaria|sobre|pouch|lata|humedo|golosina/);
-        
-        if (category === 'otros') {
-            if (isSpecial) {
-                category = 'otros'; catLabel = ''; 
-                // Para productos especiales que solo tienen un precio, buscamos el valor más alto entre las dos columnas de venta
-                precioBolsa = Math.max(valPrecioKg, valPrecioBolsa);
-                precioKg = 0;
-            } else {
-                precioBolsa = valPrecioBolsa; 
-                precioKg = valPrecioKg;    
-            }
-        } else {
-            // Asignación directa y corregida para Perros y Gatos
-            precioKg = valPrecioKg;     // Columna I
-            precioBolsa = valPrecioBolsa; // Columna J
-        }
-
-        let imgUrl = row[10] && row[10].startsWith('http') ? row[10] : getImageForProduct(nombreRaw);
-        if (precioKg <= 0 && precioBolsa <= 0) continue;
-
-        allProducts.push({
-            nombre: cleanProductName(nombreRaw), originalName: nombreRaw, weight: weight, imgUrl: imgUrl, 
-            precioKg: precioKg > 0 ? precioKg : null, precioBolsa: precioBolsa > 0 ? precioBolsa : null,
-            category: category, catLabel: catLabel, isOffer: lowerName.includes('oferta') || lowerName.includes('promo')
-        });
-    }
-    applyFilters();
-}
-
-function setCategory(cat, btn) {
-    currentCategory = cat;
-    document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
-    if(btn) { btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true'); }
-    applyFilters();
-}
-
-function applyFilters() {
-    const term = document.getElementById('searchInput').value.toLowerCase();
-    const sortOrder = document.getElementById('priceSort').value;
-    const grid = document.getElementById('product-grid');
-    grid.innerHTML = '';
-    const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+document.addEventListener('DOMContentLoaded', () => {
+    // Set support button
+    document.getElementById('supportBtn').href = 
+        `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent("Hola Peluditos! Tengo una consulta...")}`;
     
-    let filtered = allProducts.filter(p => {
-        const matchCat = currentCategory === 'all' || p.category === currentCategory;
-        const matchSearch = normalize(p.originalName).includes(normalize(term));
-        return matchCat && matchSearch;
+    // Initialize modules
+    themeManager.init();
+    shopStatus.update();
+    userManager.load();
+    cartManager.load();
+    setupEventListeners();
+    
+    // Fetch product data
+    dataLoader.fetch();
+    
+    // Update shop status every minute
+    setInterval(shopStatus.update, 60000);
+});
+
+// ============================================
+// SERVICE WORKER REGISTRATION (Optional)
+// ============================================
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        // Uncomment to enable PWA features
+        // navigator.serviceWorker.register('/sw.js');
     });
-
-    if (sortOrder !== 'default') {
-        filtered.sort((a, b) => {
-            const getMinPrice = (prod) => {
-                const prices = [];
-                if (prod.precioKg) prices.push(prod.precioKg);
-                if (prod.precioBolsa) prices.push(prod.precioBolsa);
-                return Math.min(...prices);
-            };
-            return sortOrder === 'asc' ? getMinPrice(a) - getMinPrice(b) : getMinPrice(b) - getMinPrice(a);
-        });
-    }
-
-    if (filtered.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-light);">No encontramos resultados 🐶🐱</div>'; return; }
-    const fragment = document.createDocumentFragment();
-    filtered.forEach(p => {
-        const card = document.createElement('article'); card.className = 'card';
-        let badgeHtml = p.isOffer ? `<div class="offer-badge">OFERTA</div>` : '';
-        let catLabelHtml = p.catLabel ? `<span class="category-label horizontal">${p.catLabel}</span>` : '';
-        let defaultIcon = 'fa-bag-shopping';
-        if (p.category === 'perro') defaultIcon = 'fa-dog';
-        if (p.category === 'gato') defaultIcon = 'fa-cat';
-        
-        let imgHtml = p.imgUrl ? 
-            `<div class="card-img-container">${badgeHtml}<img src="${p.imgUrl}" alt="${p.nombre}" class="product-img" loading="lazy" width="200" height="200" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><i class="fa-solid fa-paw placeholder-icon" style="display:none"></i>${catLabelHtml}</div>` : 
-            `<div class="card-img-container">${badgeHtml}<i class="fa-solid ${defaultIcon} placeholder-icon"></i>${catLabelHtml}</div>`;
-        
-        let pricesHtml = '';
-        const fmt = n => n.toLocaleString('es-AR');
-        const jsSafeName = p.nombre.replace(/'/g, "\\'");
-        
-        if (p.precioKg) {
-            pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">x Kg Suelto</span><span class="price-amount">$${fmt(p.precioKg)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', 'Kg', ${p.precioKg})" aria-label="Agregar ${p.nombre} suelto al carrito"><i class="fa-solid fa-plus"></i></button></div>`;
-        }
-        if (p.precioBolsa) {
-            let labelBolsa = 'Unidad';
-            if (p.weight) {
-                const isNumber = !isNaN(parseFloat(p.weight)) && isFinite(p.weight);
-                if (!isNumber || p.category === 'otros') { labelBolsa = p.weight; } 
-                else { labelBolsa = `Bolsa ${p.weight} Kg`; }
-            }
-            pricesHtml += `<div class="price-option"><div class="price-info"><span class="price-label">${labelBolsa}</span><span class="price-amount">$${fmt(p.precioBolsa)}</span></div><button class="btn-add" onclick="addToCart('${jsSafeName}', '${labelBolsa}', ${p.precioBolsa})" aria-label="Agregar ${p.nombre} ${labelBolsa} al carrito"><i class="fa-solid fa-plus"></i></button></div>`;
-        }
-        card.innerHTML = `${imgHtml}<div style="flex:1; display:flex; flex-direction:column;"><div class="card-header"><h2 class="card-title">${p.nombre}</h2></div><div class="card-body">${pricesHtml}</div></div>`;
-        fragment.appendChild(card);
-    });
-    grid.appendChild(fragment);
-}
-
-function saveCart() { localStorage.setItem('peluditos_cart', JSON.stringify(cart)); }
-function loadCart() { const saved = localStorage.getItem('peluditos_cart'); if (saved) { cart = JSON.parse(saved); updateCartUI(); } }
-function addToCart(name, type, price) {
-    const existing = cart.find(i => i.name === name && i.type === type);
-    if (existing) existing.qty++; else cart.push({ name, type, price, qty: 1 });
-    saveCart(); updateCartUI();
-    const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500, background: 'var(--white)', color: 'var(--text)' });
-    Toast.fire({ icon: 'success', title: 'Agregado' });
-}
-function changeQty(index, delta) { cart[index].qty += delta; if (cart[index].qty <= 0) cart.splice(index, 1); saveCart(); updateCartUI(); }
-function updateCartUI() {
-    const container = document.getElementById('cart-items'); const totalEl = document.getElementById('cart-total'); const countEl = document.getElementById('cart-count');
-    container.innerHTML = ''; let total = 0, count = 0;
-    if(cart.length === 0) container.innerHTML = '<p style="text-align:center; color:var(--text-light); margin-top:50px;">Tu carrito está vacío 🦴</p>';
-    cart.forEach((item, index) => {
-        total += item.price * item.qty; count += item.qty;
-        container.innerHTML += `<div class="cart-item"><div style="flex-grow:1"><div style="font-weight:600; font-size:0.9rem; text-transform:capitalize;">${item.name.toLowerCase()}</div><div style="font-size:0.8rem; color:var(--text-light);">${item.type} x $${item.price.toLocaleString('es-AR')}</div></div><div class="qty-control"><button class="qty-btn" onclick="changeQty(${index}, -1)" aria-label="Disminuir">-</button><span>${item.qty}</span><button class="qty-btn" onclick="changeQty(${index}, 1)" aria-label="Aumentar">+</button></div></div>`;
-    });
-    totalEl.innerText = `$${total.toLocaleString('es-AR')}`; countEl.innerText = count; countEl.style.display = count > 0 ? 'flex' : 'none';
-}
-function toggleCart() { closeAllModals(); document.getElementById('cart-modal').classList.add('active'); document.getElementById('cart-overlay').classList.add('active'); }
-function closeAllModals() { document.querySelectorAll('.cart-modal').forEach(m => m.classList.remove('active')); document.getElementById('cart-overlay').classList.remove('active'); }
-
-function checkout() {
-    if (cart.length === 0) return Swal.fire({ title: 'Ups', text: 'El carrito está vacío', icon: 'warning', background: 'var(--white)', color: 'var(--text)' });
-    closeAllModals();
-    const deliveryOpt = document.getElementById('opt-delivery'); const deliveryText = document.getElementById('delivery-text');
-    if (!ENABLE_DELIVERY) { deliveryOpt.disabled = true; deliveryText.innerText = "(No disponible)"; } 
-    else { deliveryOpt.disabled = false; deliveryText.innerText = "Envío a domicilio"; }
-    if (currentUser) { document.getElementById('cx-name').value = currentUser.name; document.getElementById('cx-phone').value = currentUser.phone; }
-    document.getElementById('checkout-modal').classList.add('active'); document.getElementById('cart-overlay').classList.add('active'); 
-}
-function closeCheckout() { document.getElementById('checkout-modal').classList.remove('active'); document.getElementById('cart-modal').classList.add('active'); }
-function toggleAddress(show) { const section = document.getElementById('address-section'); if (show) section.classList.remove('hidden'); else section.classList.add('hidden'); }
-
-function sendOrder() {
-    const name = document.getElementById('cx-name').value; const phone = document.getElementById('cx-phone').value;
-    if (!name || !phone) return Swal.fire({ title: 'Faltan datos', text: 'Por favor completa nombre y teléfono', icon: 'error' });
-    const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
-    const paymentType = document.querySelector('input[name="paymentType"]:checked').value;
-    const obs = document.getElementById('cx-obs').value;
-    let addressText = "";
-    if (deliveryType === 'delivery') {
-        const calle = document.getElementById('cx-calle').value; const extra = document.getElementById('cx-piso').value; const entre = document.getElementById('cx-entre').value;
-        if (!calle) return Swal.fire({ text: 'Por favor indica la dirección de entrega', icon: 'warning' });
-        addressText = `📍 *Envío a:* ${calle} ${extra ? '('+extra+')' : ''}\n`; if(entre) addressText += `   Entre: ${entre}\n`;
-    } else { addressText = `🏪 *Retiro en Local*\n`; }
-    let msg = `Hola Peluditos! 👋 Soy *${name}*.\n`; msg += `📞 Tel: ${phone}\n\n`; msg += `📋 *MI PEDIDO:*\n`;
-    let total = 0; cart.forEach(i => { let sub = i.price * i.qty; total += sub; msg += `▪️ ${i.qty} x ${i.name} (${i.type}) = $${sub.toLocaleString('es-AR')}\n`; });
-    msg += `\n💰 *TOTAL: $${total.toLocaleString('es-AR')}*\n`; msg += `------------------\n`;
-    msg += addressText; msg += `💳 *Pago:* ${paymentType.toUpperCase()}\n`; if(obs) msg += `📝 *Nota:* ${obs}\n`;
-    const orderRecord = { date: new Date().toISOString(), items: [...cart], total: total };
-    let historyKey = 'peluditos_history_' + phone.replace(/\D/g,'');
-    let currentHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
-    currentHistory.push(orderRecord);
-    localStorage.setItem(historyKey, JSON.stringify(currentHistory));
-    if (currentUser && currentUser.phone === phone) { userHistory = currentHistory; }
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
