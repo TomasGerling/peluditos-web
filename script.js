@@ -256,11 +256,42 @@ const shopStatus = {
         
         if (!statusBadge || !statusText) return;
         
-        const isOpen = utils.isShopOpen();
+        const now = new Date();
+        const day = now.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+        const minutes = now.getHours() * 60 + now.getMinutes();
+        
+        // Horarios del negocio
+        const morningStart = 9 * 60;        // 09:00
+        const morningEnd = 13 * 60;         // 13:00
+        const afternoonStart = 16 * 60 + 30; // 16:30
+        const afternoonEnd = 20 * 60 + 30;   // 20:30
+        
+        let isOpen = false;
+        let text = "Cerrado";
+        
+        // Lunes a Sábado (1-6)
+        if (day >= 1 && day <= 6) {
+            if ((minutes >= morningStart && minutes < morningEnd) ||
+                (minutes >= afternoonStart && minutes < afternoonEnd)) {
+                isOpen = true;
+                text = "Abierto Ahora";
+            } else {
+                if (minutes < morningStart) {
+                    text = "Abre 09:00hs";
+                } else if (minutes >= morningEnd && minutes < afternoonStart) {
+                    text = "Abre 16:30hs";
+                } else {
+                    text = "Cerrado";
+                }
+            }
+        } else {
+            // Domingo
+            text = "Cerrado (Domingo)";
+        }
         
         statusBadge.classList.remove('open', 'closed');
         statusBadge.classList.add(isOpen ? 'open' : 'closed');
-        statusText.textContent = isOpen ? 'Abierto' : 'Cerrado';
+        statusText.textContent = text;
     }
 };
 
@@ -269,73 +300,138 @@ const shopStatus = {
 // ============================================
 
 const dataLoader = {
-    fetch: async () => {
+    fetch: () => {
         state.isLoading = true;
         
-        try {
-            const response = await fetch(CONFIG.GOOGLE_SHEET_URL);
-            const csvText = await response.text();
-            
-            Papa.parse(csvText, {
-                header: true,
-                skipEmptyLines: true,
-                complete: (results) => {
-                    dataLoader.process(results.data);
-                },
-                error: (error) => {
-                    console.error('Error parsing CSV:', error);
-                    dataLoader.showError();
-                }
-            });
-        } catch (error) {
-            console.error('Error fetching data:', error);
-            dataLoader.showError();
-        }
+        Papa.parse(CONFIG.GOOGLE_SHEET_URL, {
+            download: true,
+            header: false,
+            skipEmptyLines: true,
+            complete: (results) => {
+                dataLoader.process(results.data);
+            },
+            error: (error) => {
+                console.error('Error parsing CSV:', error);
+                dataLoader.showError();
+            }
+        });
     },
     
-    process: (data) => {
-        state.allProducts = data.map((row, index) => {
-            const name = (row['nombre'] || '').trim();
-            const normalizedName = utils.normalize(name);
+    roundToCustomRule: (value) => {
+        if (!value) return 0;
+        let integerVal = Math.round(value);
+        let remainder = integerVal % 100;
+        return remainder <= 50 ? integerVal - remainder : integerVal + (100 - remainder);
+    },
+    
+    cleanPrice: (val) => {
+        if (!val) return 0;
+        let cleaned = val.toString().replace(/[$.]/g, '').replace(',', '.').replace(/[^\d.]/g, '');
+        return dataLoader.roundToCustomRule(parseFloat(cleaned) || 0);
+    },
+    
+    cleanProductName: (name) => {
+        if (!name) return "";
+        let clean = name.replace(/['"]/g, '');
+        clean = clean.replace(/\b(perro|gato|perros|gatos)\b/gi, '').replace(/\s+/g, ' ').trim();
+        return clean;
+    },
+    
+    getImageForProduct: (name) => {
+        const lowerName = utils.normalize(name);
+        
+        // Check custom images first (exact matches)
+        const customKeys = Object.keys(customImages).sort((a, b) => b.length - a.length);
+        for (const key of customKeys) {
+            if (lowerName.includes(key)) return customImages[key];
+        }
+        
+        // Check brand images
+        for (const [brand, url] of Object.entries(brandImages)) {
+            if (lowerName.includes(brand.toLowerCase())) return url;
+        }
+        
+        return null;
+    },
+    
+    process: (rows) => {
+        state.allProducts = [];
+        
+        // Process from row 3 (skip headers in rows 0-2)
+        for (let i = 3; i < rows.length; i++) {
+            const row = rows[i];
+            let nombreRaw = row[2]; // Column C
             
-            const category = (row['categoria'] || 'otros').toLowerCase();
-            const precioKg = parseFloat(row['precio_kg']) || 0;
-            const precioBolsa = parseFloat(row['precio_bolsa']) || 0;
-            const weight = (row['peso'] || '').trim();
-            const isOffer = (row['oferta'] || '').toLowerCase() === 'si';
+            if (!nombreRaw || nombreRaw.includes("DESCRIPCION")) continue;
             
+            const weightRaw = row[3]; // Column D
+            const weight = (weightRaw && weightRaw.toString().trim() !== '') ? weightRaw : null;
+            
+            // Column I (index 8): X KG (Precio suelto)
+            // Column J (index 9): BOLSA (Precio por bolsa)
+            let valPrecioKg = dataLoader.cleanPrice(row[8]);
+            let valPrecioBolsa = dataLoader.cleanPrice(row[9]);
+            
+            let precioKg = 0;
+            let precioBolsa = 0;
+            
+            const lowerName = utils.normalize(nombreRaw);
+            
+            // Determine category
+            let category = 'otros';
             let catLabel = '';
-            if (category === 'perro') catLabel = 'Perro';
-            else if (category === 'gato') catLabel = 'Gato';
             
-            let imgUrl = customImages[normalizedName] || '';
-            if (!imgUrl) {
-                for (const brand in brandImages) {
-                    if (normalizedName.includes(brand)) {
-                        imgUrl = brandImages[brand];
-                        break;
-                    }
-                }
+            if (lowerName.match(/gato|cat|kitten|gati|whiskas|felino|7 vidas|fit 32|urinary/)) {
+                category = 'gato';
+                catLabel = 'Gato';
+            } else if (lowerName.match(/perro|dog|cachorro|adulto|raza|pedigree|dogui|canino|advance|nutricare|old prince|sieger|pipon|gooster|junior|mini|medium|maxi|mordida|sileoni|fandog|guardian|vital can|eukanuba|royal canin|excellent|agility/)) {
+                category = 'perro';
+                catLabel = 'Perro';
             }
             
-            return {
-                id: `product-${index}`,
-                nombre: name,
-                originalName: name,
-                category,
-                precioKg,
-                precioBolsa,
-                weight,
-                isOffer,
-                catLabel,
-                imgUrl
-            };
-        }).filter(p => p.nombre && (p.precioKg > 0 || p.precioBolsa > 0));
+            const isSpecial = lowerName.match(/piedra|arena|sanitaria|sobre|pouch|lata|humedo|golosina/);
+            
+            if (category === 'otros') {
+                if (isSpecial) {
+                    // Para productos especiales, usar el precio más alto
+                    precioBolsa = Math.max(valPrecioKg, valPrecioBolsa);
+                    precioKg = 0;
+                } else {
+                    precioBolsa = valPrecioBolsa;
+                    precioKg = valPrecioKg;
+                }
+            } else {
+                // Para perros y gatos, asignación directa
+                precioKg = valPrecioKg;
+                precioBolsa = valPrecioBolsa;
+            }
+            
+            // Get image URL from column K (index 10) or use mapping
+            let imgUrl = row[10] && row[10].startsWith('http') ? row[10] : dataLoader.getImageForProduct(nombreRaw);
+            
+            // Skip if no valid prices
+            if (precioKg <= 0 && precioBolsa <= 0) continue;
+            
+            const isOffer = lowerName.includes('oferta') || lowerName.includes('promo');
+            
+            state.allProducts.push({
+                id: `product-${i}`,
+                nombre: dataLoader.cleanProductName(nombreRaw),
+                originalName: nombreRaw,
+                weight: weight,
+                imgUrl: imgUrl,
+                precioKg: precioKg > 0 ? precioKg : null,
+                precioBolsa: precioBolsa > 0 ? precioBolsa : null,
+                category: category,
+                catLabel: catLabel,
+                isOffer: isOffer
+            });
+        }
         
         state.isLoading = false;
         productRenderer.render();
         
-        // Hide loader
+        // Hide loader, show grid
         document.getElementById('loader').style.display = 'none';
         document.getElementById('product-grid').style.display = 'grid';
     },
@@ -640,16 +736,28 @@ const modalManager = {
 
 const userManager = {
     load: () => {
-        state.currentUser = storage.get('peluditos_user');
-        if (state.currentUser) {
+        const storedUser = storage.get('peluditos_user');
+        if (storedUser) {
+            state.currentUser = storedUser;
             userManager.updateUI();
-            userManager.loadHistory();
+            
+            // Load user history
+            const historyKey = 'peluditos_history_' + storedUser.phone.replace(/\D/g, '');
+            state.userHistory = storage.get(historyKey) || [];
+        } else {
+            userManager.updateUI();
         }
     },
     
     save: (userData) => {
         state.currentUser = userData;
         storage.set('peluditos_user', userData);
+        
+        // Also save to users database
+        let usersDB = storage.get('peluditos_users_db') || {};
+        usersDB[userData.phone] = userData;
+        storage.set('peluditos_users_db', usersDB);
+        
         userManager.updateUI();
     },
     
@@ -673,8 +781,10 @@ const userManager = {
                     modalManager.closeAll();
                     
                     Swal.fire({
-                        title: 'Sesión cerrada',
-                        icon: 'success',
+                        text: 'Sesión cerrada',
+                        icon: 'info',
+                        toast: true,
+                        position: 'top-end',
                         timer: 1500,
                         showConfirmButton: false,
                         background: 'var(--white)',
@@ -690,15 +800,20 @@ const userManager = {
         if (!userBtn) return;
         
         if (state.currentUser) {
-            const span = userBtn.querySelector('span');
-            if (span) {
-                span.textContent = state.currentUser.name.split(' ')[0];
+            userBtn.innerHTML = `<i class="fa-solid fa-user"></i> <span>${state.currentUser.name.split(' ')[0]}</span>`;
+            
+            // Update profile modal
+            const profileName = document.getElementById('profile-name');
+            const profilePhone = document.getElementById('profile-phone');
+            const profileInitial = document.getElementById('profile-initial');
+            
+            if (profileName) profileName.textContent = state.currentUser.name;
+            if (profilePhone) profilePhone.textContent = '+54 ' + state.currentUser.phone;
+            if (profileInitial) {
+                profileInitial.textContent = state.currentUser.name.charAt(0).toUpperCase();
             }
         } else {
-            const span = userBtn.querySelector('span');
-            if (span) {
-                span.textContent = 'Ingresar';
-            }
+            userBtn.innerHTML = `<i class="fa-regular fa-user"></i> <span>Ingresar</span>`;
         }
     },
     
@@ -716,10 +831,10 @@ const userManager = {
         const container = document.getElementById('history-container');
         if (!container) return;
         
-        if (state.userHistory.length === 0) {
+        if (!state.userHistory || state.userHistory.length === 0) {
             container.innerHTML = `
                 <p style="text-align:center; color:var(--text-light); padding:20px;">
-                    Aún no tienes pedidos
+                    Aún no tienes pedidos realizados.
                 </p>
             `;
             return;
@@ -727,7 +842,7 @@ const userManager = {
         
         container.innerHTML = '';
         
-        // Show last 10 orders
+        // Show last 10 orders, most recent first
         state.userHistory.slice(-10).reverse().forEach((order, index) => {
             const orderEl = document.createElement('div');
             orderEl.className = 'history-card';
@@ -738,6 +853,8 @@ const userManager = {
                 `${i.qty}× ${i.name} (${i.type})`
             ).join('<br>');
             
+            const realIndex = state.userHistory.length - 1 - index;
+            
             orderEl.innerHTML = `
                 <div class="history-header">
                     <span><i class="fa-regular fa-calendar"></i> ${utils.formatDate(order.date)}</span>
@@ -746,7 +863,7 @@ const userManager = {
                 <div class="history-items">${itemsList}</div>
                 <div class="history-footer">
                     <span class="history-price">$${utils.formatPrice(order.total)}</span>
-                    <button class="btn-repeat" onclick="userManager.repeatOrder(${state.userHistory.length - 1 - index})">
+                    <button class="btn-repeat" onclick="userManager.repeatOrder(${realIndex})">
                         <i class="fa-solid fa-rotate-right"></i> Repetir
                     </button>
                 </div>
@@ -757,8 +874,7 @@ const userManager = {
     },
     
     repeatOrder: (index) => {
-        const realIndex = state.userHistory.length - 1 - index;
-        const order = state.userHistory[realIndex];
+        const order = state.userHistory[index];
         
         if (!order) return;
         
@@ -788,8 +904,10 @@ const userManager = {
                     modalManager.closeAll();
                     
                     Swal.fire({
-                        title: 'Pedido agregado',
+                        title: 'Productos agregados',
                         icon: 'success',
+                        toast: true,
+                        position: 'bottom-end',
                         timer: 1500,
                         showConfirmButton: false,
                         background: 'var(--white)',
@@ -954,6 +1072,8 @@ const checkoutManager = {
 
 const loginManager = {
     openOrProfile: () => {
+        modalManager.closeAll();
+        
         if (state.currentUser) {
             // Show profile
             const profileName = document.getElementById('profile-name');
@@ -961,7 +1081,7 @@ const loginManager = {
             const profileInitial = document.getElementById('profile-initial');
             
             if (profileName) profileName.textContent = state.currentUser.name;
-            if (profilePhone) profilePhone.textContent = state.currentUser.phone;
+            if (profilePhone) profilePhone.textContent = '+54 ' + state.currentUser.phone;
             if (profileInitial) {
                 profileInitial.textContent = state.currentUser.name.charAt(0).toUpperCase();
             }
@@ -969,19 +1089,35 @@ const loginManager = {
             userManager.loadHistory();
             modalManager.open('profile-modal');
         } else {
-            // Show login
+            // Show login - reset form
+            const stepPhone = document.getElementById('step-phone');
+            const stepName = document.getElementById('step-name');
+            const loginPhone = document.getElementById('login-phone');
+            
+            if (stepPhone) stepPhone.classList.remove('hidden');
+            if (stepName) stepName.classList.add('hidden');
+            if (loginPhone) {
+                loginPhone.value = '';
+                setTimeout(() => loginPhone.focus(), 300);
+            }
+            
             modalManager.open('login-modal');
         }
     },
     
     check: () => {
-        const phone = document.getElementById('login-phone')?.value.trim();
+        const phoneInput = document.getElementById('login-phone');
+        const phone = phoneInput?.value.trim();
         
-        if (!phone) {
+        if (!phone || phone.length < 8) {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
-                    text: 'Ingresa tu número de teléfono',
+                    text: 'Ingresa un número válido',
                     icon: 'warning',
+                    toast: true,
+                    position: 'top',
+                    timer: 2000,
+                    showConfirmButton: false,
                     background: 'var(--white)',
                     color: 'var(--text)'
                 });
@@ -989,47 +1125,44 @@ const loginManager = {
             return;
         }
         
-        const historyKey = `peluditos_history_${phone.replace(/\D/g, '')}`;
-        const history = storage.get(historyKey);
+        // Check if user exists in database
+        let usersDB = storage.get('peluditos_users_db') || {};
         
-        if (history && history.length > 0) {
-            // User exists - get name from first order or ask
-            const savedUser = storage.get('peluditos_user');
-            if (savedUser && savedUser.phone === phone) {
-                userManager.save(savedUser);
-                modalManager.closeAll();
-                
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        title: `¡Bienvenido ${savedUser.name}!`,
-                        icon: 'success',
-                        timer: 1500,
-                        showConfirmButton: false,
-                        background: 'var(--white)',
-                        color: 'var(--text)'
-                    });
-                }
-            } else {
-                // Show name input for returning user
-                document.getElementById('step-phone')?.classList.add('hidden');
-                document.getElementById('step-name')?.classList.remove('hidden');
-            }
+        if (usersDB[phone]) {
+            // User exists - login
+            state.currentUser = usersDB[phone];
+            storage.set('peluditos_user', state.currentUser);
+            loginManager.finishLogin();
         } else {
-            // New user
-            document.getElementById('step-phone')?.classList.add('hidden');
-            document.getElementById('step-name')?.classList.remove('hidden');
+            // New user - show name input
+            const stepPhone = document.getElementById('step-phone');
+            const stepName = document.getElementById('step-name');
+            const loginName = document.getElementById('login-name');
+            
+            if (stepPhone) stepPhone.classList.add('hidden');
+            if (stepName) stepName.classList.remove('hidden');
+            if (loginName) {
+                setTimeout(() => loginName.focus(), 300);
+            }
         }
     },
     
     register: () => {
-        const phone = document.getElementById('login-phone')?.value.trim();
-        const name = document.getElementById('login-name')?.value.trim();
+        const phoneInput = document.getElementById('login-phone');
+        const nameInput = document.getElementById('login-name');
         
-        if (!name) {
+        const phone = phoneInput?.value.trim();
+        const name = nameInput?.value.trim();
+        
+        if (!name || name.length < 2) {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
-                    text: 'Por favor ingresa tu nombre',
+                    text: 'Escribe tu nombre',
                     icon: 'warning',
+                    toast: true,
+                    position: 'top',
+                    timer: 2000,
+                    showConfirmButton: false,
                     background: 'var(--white)',
                     color: 'var(--text)'
                 });
@@ -1037,24 +1170,37 @@ const loginManager = {
             return;
         }
         
-        const userData = { name, phone };
-        userManager.save(userData);
+        // Create new user
+        const newUser = {
+            phone: phone,
+            name: name,
+            joined: new Date().toISOString()
+        };
         
-        // Reset login form
-        document.getElementById('step-phone')?.classList.remove('hidden');
-        document.getElementById('step-name')?.classList.add('hidden');
-        document.getElementById('login-phone').value = '';
-        document.getElementById('login-name').value = '';
+        // Save to users database
+        let usersDB = storage.get('peluditos_users_db') || {};
+        usersDB[phone] = newUser;
+        storage.set('peluditos_users_db', usersDB);
         
+        // Set as current user
+        state.currentUser = newUser;
+        storage.set('peluditos_user', state.currentUser);
+        
+        loginManager.finishLogin();
+    },
+    
+    finishLogin: () => {
+        userManager.load();
         modalManager.closeAll();
         
         if (typeof Swal !== 'undefined') {
             Swal.fire({
-                title: `¡Bienvenido ${name}!`,
-                text: 'Tu cuenta ha sido creada',
                 icon: 'success',
-                timer: 2000,
+                title: `¡Hola ${state.currentUser.name}!`,
+                toast: true,
+                position: 'top-end',
                 showConfirmButton: false,
+                timer: 2000,
                 background: 'var(--white)',
                 color: 'var(--text)'
             });
